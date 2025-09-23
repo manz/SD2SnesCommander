@@ -1,13 +1,6 @@
-//
-//  QFile2SnesUITestsLaunchTests.swift
-//  QFile2SnesUITests
-//
-//  Created by Emmanuel Peralta on 21/09/2025.
-//
-
 import XCTest
 
-final class QFile2SnesUITestsLaunchTests: XCTestCase {
+final class SD2SnesCommanderUITestsLaunchTests: XCTestCase {
 
     override class var runsForEachTargetApplicationUIConfiguration: Bool {
         true

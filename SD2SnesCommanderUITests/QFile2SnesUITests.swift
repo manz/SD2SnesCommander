@@ -1,13 +1,6 @@
-//
-//  QFile2SnesUITests.swift
-//  QFile2SnesUITests
-//
-//  Created by Emmanuel Peralta on 21/09/2025.
-//
-
 import XCTest
 
-final class QFile2SnesUITests: XCTestCase {
+final class SD2SnesCommanderUITests: XCTestCase {
 
     override func setUpWithError() throws {
         // Put setup code here. This method is called before the invocation of each test method in the class.

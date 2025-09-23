@@ -1,0 +1,1091 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		B41DAB2B2E8068160020B624 /* IOUSBHost.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B41DAB2A2E8068160020B624 /* IOUSBHost.framework */; };
+		B41DAB2F2E8069DE0020B624 /* IOKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B41DAB282E804D990020B624 /* IOKit.framework */; };
+		B4D761132E82B9B0009E3B03 /* SD2snesCommanderCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B4D761082E82B9B0009E3B03 /* SD2snesCommanderCore.framework */; };
+		B4D7611D2E82B9B0009E3B03 /* SD2snesCommanderCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B4D761082E82B9B0009E3B03 /* SD2snesCommanderCore.framework */; };
+		B4D7611E2E82B9B0009E3B03 /* SD2snesCommanderCore.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = B4D761082E82B9B0009E3B03 /* SD2snesCommanderCore.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		B4D761262E82B9C9009E3B03 /* SD2snesCommanderCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B4D761082E82B9B0009E3B03 /* SD2snesCommanderCore.framework */; };
+		B4D761382E82BC92009E3B03 /* IOKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B41DAB282E804D990020B624 /* IOKit.framework */; };
+		B4D761422E82BD02009E3B03 /* USB/sd2snes_usb.h in Headers */ = {isa = PBXBuildFile; fileRef = B4D761432E82BD02009E3B03 /* USB/sd2snes_usb.h */; settings = {ATTRIBUTES = (Public, ); }; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		B41DAAF72E804C2F0020B624 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = B41DAAE12E804C2D0020B624 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = B41DAAE82E804C2D0020B624;
+			remoteInfo = QFile2Snes;
+		};
+		B41DAB012E804C2F0020B624 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = B41DAAE12E804C2D0020B624 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = B41DAAE82E804C2D0020B624;
+			remoteInfo = QFile2Snes;
+		};
+		B4D761142E82B9B0009E3B03 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = B41DAAE12E804C2D0020B624 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = B4D761072E82B9B0009E3B03;
+			remoteInfo = SD2snesCommanderCore;
+		};
+		B4D761162E82B9B0009E3B03 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = B41DAAE12E804C2D0020B624 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = B41DAAE82E804C2D0020B624;
+			remoteInfo = SD2SnesCommander;
+		};
+		B4D7611B2E82B9B0009E3B03 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = B41DAAE12E804C2D0020B624 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = B4D761072E82B9B0009E3B03;
+			remoteInfo = SD2snesCommanderCore;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		B4D761222E82B9B0009E3B03 /* Embed Frameworks */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 10;
+			files = (
+				B4D7611E2E82B9B0009E3B03 /* SD2snesCommanderCore.framework in Embed Frameworks */,
+			);
+			name = "Embed Frameworks";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
+/* Begin PBXFileReference section */
+		B41DAAE92E804C2D0020B624 /* SD2SnesCommander.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SD2SnesCommander.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		B41DAAF62E804C2F0020B624 /* SD2SnesCommanderTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = SD2SnesCommanderTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		B41DAB002E804C2F0020B624 /* SD2SnesCommanderUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = SD2SnesCommanderUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		B41DAB282E804D990020B624 /* IOKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = IOKit.framework; path = System/Library/Frameworks/IOKit.framework; sourceTree = SDKROOT; };
+		B41DAB2A2E8068160020B624 /* IOUSBHost.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = IOUSBHost.framework; path = System/Library/Frameworks/IOUSBHost.framework; sourceTree = SDKROOT; };
+		B4D761082E82B9B0009E3B03 /* SD2snesCommanderCore.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = SD2snesCommanderCore.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		B4D761122E82B9B0009E3B03 /* SD2snesCommanderCoreTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = SD2snesCommanderCoreTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		B4D761412E82BD01009E3B03 /* SD2snesCommanderCore.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SD2snesCommanderCore.h; sourceTree = "<group>"; };
+		B4D761432E82BD02009E3B03 /* USB/sd2snes_usb.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SD2snesCommanderCore/USB/sd2snes_usb.h; sourceTree = "<group>"; };
+		B4EC183B2E82B17F005A8E0A /* SD2SnesFileSync.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = SD2SnesFileSync.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+/* End PBXFileReference section */
+
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		B4D761442E82CDB4009E3B03 /* Exceptions for "SD2snesCommanderCore" folder in "SD2snesCommanderCore" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			publicHeaders = (
+				SD2snesCommanderCore.h,
+			);
+			target = B4D761072E82B9B0009E3B03 /* SD2snesCommanderCore */;
+		};
+		B4EC18462E82B17F005A8E0A /* Exceptions for "SD2SnesFileSync" folder in "SD2SnesFileSync" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = B4EC183A2E82B17F005A8E0A /* SD2SnesFileSync */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
+/* Begin PBXFileSystemSynchronizedRootGroup section */
+		B41DAAEB2E804C2D0020B624 /* SD2SnesCommander */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = SD2SnesCommander;
+			sourceTree = "<group>";
+		};
+		B41DAAF92E804C2F0020B624 /* SD2SnesCommanderTests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = SD2SnesCommanderTests;
+			sourceTree = "<group>";
+		};
+		B41DAB032E804C2F0020B624 /* SD2SnesCommanderUITests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = SD2SnesCommanderUITests;
+			sourceTree = "<group>";
+		};
+		B4D761092E82B9B0009E3B03 /* SD2snesCommanderCore */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				B4D761442E82CDB4009E3B03 /* Exceptions for "SD2snesCommanderCore" folder in "SD2snesCommanderCore" target */,
+			);
+			path = SD2snesCommanderCore;
+			sourceTree = "<group>";
+		};
+		B4D761182E82B9B0009E3B03 /* SD2snesCommanderCoreTests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = SD2snesCommanderCoreTests;
+			sourceTree = "<group>";
+		};
+		B4EC183C2E82B17F005A8E0A /* SD2SnesFileSync */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				B4EC18462E82B17F005A8E0A /* Exceptions for "SD2SnesFileSync" folder in "SD2SnesFileSync" target */,
+			);
+			path = SD2SnesFileSync;
+			sourceTree = "<group>";
+		};
+/* End PBXFileSystemSynchronizedRootGroup section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		B41DAAE62E804C2D0020B624 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				B41DAB2B2E8068160020B624 /* IOUSBHost.framework in Frameworks */,
+				B4D7611D2E82B9B0009E3B03 /* SD2snesCommanderCore.framework in Frameworks */,
+				B41DAB2F2E8069DE0020B624 /* IOKit.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		B41DAAF32E804C2F0020B624 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		B41DAAFD2E804C2F0020B624 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		B4D761052E82B9B0009E3B03 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				B4D761382E82BC92009E3B03 /* IOKit.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		B4D7610F2E82B9B0009E3B03 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				B4D761132E82B9B0009E3B03 /* SD2snesCommanderCore.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		B4EC18382E82B17F005A8E0A /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				B4D761262E82B9C9009E3B03 /* SD2snesCommanderCore.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		B41DAAE02E804C2D0020B624 = {
+			isa = PBXGroup;
+			children = (
+				B41DAAEB2E804C2D0020B624 /* SD2SnesCommander */,
+				B41DAAF92E804C2F0020B624 /* SD2SnesCommanderTests */,
+				B41DAB032E804C2F0020B624 /* SD2SnesCommanderUITests */,
+				B4EC183C2E82B17F005A8E0A /* SD2SnesFileSync */,
+				B4D761092E82B9B0009E3B03 /* SD2snesCommanderCore */,
+				B4D761182E82B9B0009E3B03 /* SD2snesCommanderCoreTests */,
+				B41DAB272E804D990020B624 /* Frameworks */,
+				B41DAAEA2E804C2D0020B624 /* Products */,
+				B435E73F2E82CE4D004FF67E /* Recovered References */,
+			);
+			sourceTree = "<group>";
+		};
+		B41DAAEA2E804C2D0020B624 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				B41DAAE92E804C2D0020B624 /* SD2SnesCommander.app */,
+				B41DAAF62E804C2F0020B624 /* SD2SnesCommanderTests.xctest */,
+				B41DAB002E804C2F0020B624 /* SD2SnesCommanderUITests.xctest */,
+				B4EC183B2E82B17F005A8E0A /* SD2SnesFileSync.appex */,
+				B4D761082E82B9B0009E3B03 /* SD2snesCommanderCore.framework */,
+				B4D761122E82B9B0009E3B03 /* SD2snesCommanderCoreTests.xctest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		B41DAB272E804D990020B624 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				B41DAB2A2E8068160020B624 /* IOUSBHost.framework */,
+				B41DAB282E804D990020B624 /* IOKit.framework */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		B435E73F2E82CE4D004FF67E /* Recovered References */ = {
+			isa = PBXGroup;
+			children = (
+				B4D761412E82BD01009E3B03 /* SD2snesCommanderCore.h */,
+				B4D761432E82BD02009E3B03 /* USB/sd2snes_usb.h */,
+			);
+			name = "Recovered References";
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXHeadersBuildPhase section */
+		B4D761032E82B9B0009E3B03 /* Headers */ = {
+			isa = PBXHeadersBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				B4D761422E82BD02009E3B03 /* USB/sd2snes_usb.h in Headers */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXHeadersBuildPhase section */
+
+/* Begin PBXNativeTarget section */
+		B41DAAE82E804C2D0020B624 /* SD2SnesCommander */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = B41DAB0A2E804C2F0020B624 /* Build configuration list for PBXNativeTarget "SD2SnesCommander" */;
+			buildPhases = (
+				B41DAAE52E804C2D0020B624 /* Sources */,
+				B41DAAE62E804C2D0020B624 /* Frameworks */,
+				B41DAAE72E804C2D0020B624 /* Resources */,
+				B4D761222E82B9B0009E3B03 /* Embed Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				B4D7611C2E82B9B0009E3B03 /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				B41DAAEB2E804C2D0020B624 /* SD2SnesCommander */,
+			);
+			name = SD2SnesCommander;
+			packageProductDependencies = (
+			);
+			productName = SD2SnesCommander;
+			productReference = B41DAAE92E804C2D0020B624 /* SD2SnesCommander.app */;
+			productType = "com.apple.product-type.application";
+		};
+		B41DAAF52E804C2F0020B624 /* SD2SnesCommanderTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = B41DAB0D2E804C2F0020B624 /* Build configuration list for PBXNativeTarget "SD2SnesCommanderTests" */;
+			buildPhases = (
+				B41DAAF22E804C2F0020B624 /* Sources */,
+				B41DAAF32E804C2F0020B624 /* Frameworks */,
+				B41DAAF42E804C2F0020B624 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				B41DAAF82E804C2F0020B624 /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				B41DAAF92E804C2F0020B624 /* SD2SnesCommanderTests */,
+			);
+			name = SD2SnesCommanderTests;
+			packageProductDependencies = (
+			);
+			productName = SD2SnesCommanderTests;
+			productReference = B41DAAF62E804C2F0020B624 /* SD2SnesCommanderTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+		B41DAAFF2E804C2F0020B624 /* SD2SnesCommanderUITests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = B41DAB102E804C2F0020B624 /* Build configuration list for PBXNativeTarget "SD2SnesCommanderUITests" */;
+			buildPhases = (
+				B41DAAFC2E804C2F0020B624 /* Sources */,
+				B41DAAFD2E804C2F0020B624 /* Frameworks */,
+				B41DAAFE2E804C2F0020B624 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				B41DAB022E804C2F0020B624 /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				B41DAB032E804C2F0020B624 /* SD2SnesCommanderUITests */,
+			);
+			name = SD2SnesCommanderUITests;
+			packageProductDependencies = (
+			);
+			productName = SD2SnesCommanderUITests;
+			productReference = B41DAB002E804C2F0020B624 /* SD2SnesCommanderUITests.xctest */;
+			productType = "com.apple.product-type.bundle.ui-testing";
+		};
+		B4D761072E82B9B0009E3B03 /* SD2snesCommanderCore */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = B4D7611F2E82B9B0009E3B03 /* Build configuration list for PBXNativeTarget "SD2snesCommanderCore" */;
+			buildPhases = (
+				B4D761032E82B9B0009E3B03 /* Headers */,
+				B4D761042E82B9B0009E3B03 /* Sources */,
+				B4D761052E82B9B0009E3B03 /* Frameworks */,
+				B4D761062E82B9B0009E3B03 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				B4D761092E82B9B0009E3B03 /* SD2snesCommanderCore */,
+			);
+			name = SD2snesCommanderCore;
+			packageProductDependencies = (
+			);
+			productName = SD2snesCommanderCore;
+			productReference = B4D761082E82B9B0009E3B03 /* SD2snesCommanderCore.framework */;
+			productType = "com.apple.product-type.framework";
+		};
+		B4D761112E82B9B0009E3B03 /* SD2snesCommanderCoreTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = B4D761232E82B9B0009E3B03 /* Build configuration list for PBXNativeTarget "SD2snesCommanderCoreTests" */;
+			buildPhases = (
+				B4D7610E2E82B9B0009E3B03 /* Sources */,
+				B4D7610F2E82B9B0009E3B03 /* Frameworks */,
+				B4D761102E82B9B0009E3B03 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				B4D761152E82B9B0009E3B03 /* PBXTargetDependency */,
+				B4D761172E82B9B0009E3B03 /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				B4D761182E82B9B0009E3B03 /* SD2snesCommanderCoreTests */,
+			);
+			name = SD2snesCommanderCoreTests;
+			packageProductDependencies = (
+			);
+			productName = SD2snesCommanderCoreTests;
+			productReference = B4D761122E82B9B0009E3B03 /* SD2snesCommanderCoreTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+		B4EC183A2E82B17F005A8E0A /* SD2SnesFileSync */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = B4EC18472E82B17F005A8E0A /* Build configuration list for PBXNativeTarget "SD2SnesFileSync" */;
+			buildPhases = (
+				B4EC18372E82B17F005A8E0A /* Sources */,
+				B4EC18382E82B17F005A8E0A /* Frameworks */,
+				B4EC18392E82B17F005A8E0A /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				B4EC183C2E82B17F005A8E0A /* SD2SnesFileSync */,
+			);
+			name = SD2SnesFileSync;
+			packageProductDependencies = (
+			);
+			productName = SD2SnesFileSync;
+			productReference = B4EC183B2E82B17F005A8E0A /* SD2SnesFileSync.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		B41DAAE12E804C2D0020B624 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 2600;
+				LastUpgradeCheck = 2600;
+				TargetAttributes = {
+					B41DAAE82E804C2D0020B624 = {
+						CreatedOnToolsVersion = 26.0;
+					};
+					B41DAAF52E804C2F0020B624 = {
+						CreatedOnToolsVersion = 26.0;
+						TestTargetID = B41DAAE82E804C2D0020B624;
+					};
+					B41DAAFF2E804C2F0020B624 = {
+						CreatedOnToolsVersion = 26.0;
+						TestTargetID = B41DAAE82E804C2D0020B624;
+					};
+					B4D761072E82B9B0009E3B03 = {
+						CreatedOnToolsVersion = 26.0;
+					};
+					B4D761112E82B9B0009E3B03 = {
+						CreatedOnToolsVersion = 26.0;
+						TestTargetID = B41DAAE82E804C2D0020B624;
+					};
+					B4EC183A2E82B17F005A8E0A = {
+						CreatedOnToolsVersion = 26.0;
+					};
+				};
+			};
+			buildConfigurationList = B41DAAE42E804C2D0020B624 /* Build configuration list for PBXProject "SD2SnesCommander" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = B41DAAE02E804C2D0020B624;
+			minimizedProjectReferenceProxies = 1;
+			preferredProjectObjectVersion = 77;
+			productRefGroup = B41DAAEA2E804C2D0020B624 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				B41DAAE82E804C2D0020B624 /* SD2SnesCommander */,
+				B41DAAF52E804C2F0020B624 /* SD2SnesCommanderTests */,
+				B41DAAFF2E804C2F0020B624 /* SD2SnesCommanderUITests */,
+				B4EC183A2E82B17F005A8E0A /* SD2SnesFileSync */,
+				B4D761072E82B9B0009E3B03 /* SD2snesCommanderCore */,
+				B4D761112E82B9B0009E3B03 /* SD2snesCommanderCoreTests */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		B41DAAE72E804C2D0020B624 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		B41DAAF42E804C2F0020B624 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		B41DAAFE2E804C2F0020B624 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		B4D761062E82B9B0009E3B03 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		B4D761102E82B9B0009E3B03 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		B4EC18392E82B17F005A8E0A /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		B41DAAE52E804C2D0020B624 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		B41DAAF22E804C2F0020B624 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		B41DAAFC2E804C2F0020B624 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		B4D761042E82B9B0009E3B03 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		B4D7610E2E82B9B0009E3B03 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		B4EC18372E82B17F005A8E0A /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		B41DAAF82E804C2F0020B624 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = B41DAAE82E804C2D0020B624 /* SD2SnesCommander */;
+			targetProxy = B41DAAF72E804C2F0020B624 /* PBXContainerItemProxy */;
+		};
+		B41DAB022E804C2F0020B624 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = B41DAAE82E804C2D0020B624 /* SD2SnesCommander */;
+			targetProxy = B41DAB012E804C2F0020B624 /* PBXContainerItemProxy */;
+		};
+		B4D761152E82B9B0009E3B03 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = B4D761072E82B9B0009E3B03 /* SD2snesCommanderCore */;
+			targetProxy = B4D761142E82B9B0009E3B03 /* PBXContainerItemProxy */;
+		};
+		B4D761172E82B9B0009E3B03 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = B41DAAE82E804C2D0020B624 /* SD2SnesCommander */;
+			targetProxy = B4D761162E82B9B0009E3B03 /* PBXContainerItemProxy */;
+		};
+		B4D7611C2E82B9B0009E3B03 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = B4D761072E82B9B0009E3B03 /* SD2snesCommanderCore */;
+			targetProxy = B4D7611B2E82B9B0009E3B03 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		B41DAB082E804C2F0020B624 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MACOSX_DEPLOYMENT_TARGET = 26.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = macosx;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		B41DAB092E804C2F0020B624 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MACOSX_DEPLOYMENT_TARGET = 26.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				SDKROOT = macosx;
+				SWIFT_COMPILATION_MODE = wholemodule;
+			};
+			name = Release;
+		};
+		B41DAB0B2E804C2F0020B624 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = NO;
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				ENABLE_APP_SANDBOX = YES;
+				ENABLE_INCOMING_NETWORK_CONNECTIONS = NO;
+				ENABLE_OUTGOING_NETWORK_CONNECTIONS = NO;
+				ENABLE_PREVIEWS = YES;
+				ENABLE_RESOURCE_ACCESS_AUDIO_INPUT = NO;
+				ENABLE_RESOURCE_ACCESS_BLUETOOTH = NO;
+				ENABLE_RESOURCE_ACCESS_CALENDARS = NO;
+				ENABLE_RESOURCE_ACCESS_CAMERA = NO;
+				ENABLE_RESOURCE_ACCESS_CONTACTS = NO;
+				ENABLE_RESOURCE_ACCESS_LOCATION = NO;
+				ENABLE_RESOURCE_ACCESS_PRINTING = NO;
+				ENABLE_RESOURCE_ACCESS_USB = YES;
+				ENABLE_USER_SELECTED_FILES = readwrite;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = "SD2Snes Commander";
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = net.ringum.SD2SnesCommander;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				REGISTER_APP_GROUPS = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		B41DAB0C2E804C2F0020B624 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = NO;
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				ENABLE_APP_SANDBOX = YES;
+				ENABLE_INCOMING_NETWORK_CONNECTIONS = NO;
+				ENABLE_OUTGOING_NETWORK_CONNECTIONS = NO;
+				ENABLE_PREVIEWS = YES;
+				ENABLE_RESOURCE_ACCESS_AUDIO_INPUT = NO;
+				ENABLE_RESOURCE_ACCESS_BLUETOOTH = NO;
+				ENABLE_RESOURCE_ACCESS_CALENDARS = NO;
+				ENABLE_RESOURCE_ACCESS_CAMERA = NO;
+				ENABLE_RESOURCE_ACCESS_CONTACTS = NO;
+				ENABLE_RESOURCE_ACCESS_LOCATION = NO;
+				ENABLE_RESOURCE_ACCESS_PRINTING = NO;
+				ENABLE_RESOURCE_ACCESS_USB = YES;
+				ENABLE_USER_SELECTED_FILES = readwrite;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = "SD2Snes Commander";
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = net.ringum.SD2SnesCommander;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				REGISTER_APP_GROUPS = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+		B41DAB0E2E804C2F0020B624 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 26.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = net.ringum.SD2SnesCommanderTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/SD2SnesCommander.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/SD2SnesCommander";
+			};
+			name = Debug;
+		};
+		B41DAB0F2E804C2F0020B624 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 26.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = net.ringum.SD2SnesCommanderTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/SD2SnesCommander.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/SD2SnesCommander";
+			};
+			name = Release;
+		};
+		B41DAB112E804C2F0020B624 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = net.ringum.SD2SnesCommanderUITests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TEST_TARGET_NAME = SD2SnesCommander;
+			};
+			name = Debug;
+		};
+		B41DAB122E804C2F0020B624 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = net.ringum.SD2SnesCommanderUITests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TEST_TARGET_NAME = SD2SnesCommander;
+			};
+			name = Release;
+		};
+		B4D761202E82B9B0009E3B03 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUILD_LIBRARY_FOR_DISTRIBUTION = YES;
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				DEFINES_MODULE = YES;
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				DYLIB_INSTALL_NAME_BASE = "@rpath";
+				ENABLE_MODULE_VERIFIER = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				HEADER_SEARCH_PATHS = "$(SRCROOT)/SD2snesCommanderCore/";
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@loader_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				MODULE_VERIFIER_SUPPORTED_LANGUAGES = "objective-c objective-c++";
+				MODULE_VERIFIER_SUPPORTED_LANGUAGE_STANDARDS = "gnu17 gnu++20";
+				PRODUCT_BUNDLE_IDENTIFIER = net.ringum.SD2snesCommanderCore;
+				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_INSTALL_MODULE = YES;
+				SWIFT_INSTALL_OBJC_HEADER = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				VERSIONING_SYSTEM = "apple-generic";
+				VERSION_INFO_PREFIX = "";
+			};
+			name = Debug;
+		};
+		B4D761212E82B9B0009E3B03 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUILD_LIBRARY_FOR_DISTRIBUTION = YES;
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				DEFINES_MODULE = YES;
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				DYLIB_INSTALL_NAME_BASE = "@rpath";
+				ENABLE_MODULE_VERIFIER = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				HEADER_SEARCH_PATHS = "$(SRCROOT)/SD2snesCommanderCore/";
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@loader_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				MODULE_VERIFIER_SUPPORTED_LANGUAGES = "objective-c objective-c++";
+				MODULE_VERIFIER_SUPPORTED_LANGUAGE_STANDARDS = "gnu17 gnu++20";
+				PRODUCT_BUNDLE_IDENTIFIER = net.ringum.SD2snesCommanderCore;
+				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_INSTALL_MODULE = YES;
+				SWIFT_INSTALL_OBJC_HEADER = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				VERSIONING_SYSTEM = "apple-generic";
+				VERSION_INFO_PREFIX = "";
+			};
+			name = Release;
+		};
+		B4D761242E82B9B0009E3B03 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = FZAYF37SJF;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = net.ringum.SD2snesCommanderCoreTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/SD2SnesCommander.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/SD2SnesCommander";
+			};
+			name = Debug;
+		};
+		B4D761252E82B9B0009E3B03 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = FZAYF37SJF;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = net.ringum.SD2snesCommanderCoreTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/SD2SnesCommander.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/SD2SnesCommander";
+			};
+			name = Release;
+		};
+		B4EC18442E82B17F005A8E0A /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				ENABLE_APP_SANDBOX = YES;
+				ENABLE_HARDENED_RUNTIME = YES;
+				ENABLE_USER_SELECTED_FILES = readonly;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = SD2SnesFileSync/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = SD2SnesFileSync;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@executable_path/../../../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = net.ringum.SD2SnesCommander.SD2SnesFileSync;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		B4EC18452E82B17F005A8E0A /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				ENABLE_APP_SANDBOX = YES;
+				ENABLE_HARDENED_RUNTIME = YES;
+				ENABLE_USER_SELECTED_FILES = readonly;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = SD2SnesFileSync/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = SD2SnesFileSync;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@executable_path/../../../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = net.ringum.SD2SnesCommander.SD2SnesFileSync;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		B41DAAE42E804C2D0020B624 /* Build configuration list for PBXProject "SD2SnesCommander" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				B41DAB082E804C2F0020B624 /* Debug */,
+				B41DAB092E804C2F0020B624 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		B41DAB0A2E804C2F0020B624 /* Build configuration list for PBXNativeTarget "SD2SnesCommander" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				B41DAB0B2E804C2F0020B624 /* Debug */,
+				B41DAB0C2E804C2F0020B624 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		B41DAB0D2E804C2F0020B624 /* Build configuration list for PBXNativeTarget "SD2SnesCommanderTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				B41DAB0E2E804C2F0020B624 /* Debug */,
+				B41DAB0F2E804C2F0020B624 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		B41DAB102E804C2F0020B624 /* Build configuration list for PBXNativeTarget "SD2SnesCommanderUITests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				B41DAB112E804C2F0020B624 /* Debug */,
+				B41DAB122E804C2F0020B624 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		B4D7611F2E82B9B0009E3B03 /* Build configuration list for PBXNativeTarget "SD2snesCommanderCore" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				B4D761202E82B9B0009E3B03 /* Debug */,
+				B4D761212E82B9B0009E3B03 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		B4D761232E82B9B0009E3B03 /* Build configuration list for PBXNativeTarget "SD2snesCommanderCoreTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				B4D761242E82B9B0009E3B03 /* Debug */,
+				B4D761252E82B9B0009E3B03 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		B4EC18472E82B17F005A8E0A /* Build configuration list for PBXNativeTarget "SD2SnesFileSync" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				B4EC18442E82B17F005A8E0A /* Debug */,
+				B4EC18452E82B17F005A8E0A /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = B41DAAE12E804C2D0020B624 /* Project object */;
+}
