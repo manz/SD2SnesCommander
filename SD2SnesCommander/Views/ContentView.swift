@@ -3,7 +3,11 @@ import UniformTypeIdentifiers
 import SD2snesCommanderCore
 
 struct ContentView: View {
-    @StateObject private var viewModel = MainViewModel()
+    @StateObject private var appState = AppState.shared
+
+    private var viewModel: MainViewModel {
+        appState.mainViewModel
+    }
     
     var body: some View {
         NavigationSplitView {

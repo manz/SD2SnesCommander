@@ -1,7 +1,11 @@
 import SwiftUI
+import AppKit
+import Combine
 
 @main
 struct SD2SnesCommanderApp: App {
+    @StateObject private var appDelegate = AppDelegate()
+
     var body: some Scene {
         WindowGroup {
             ContentView()
@@ -15,20 +19,34 @@ struct SD2SnesCommanderApp: App {
                     // Show about dialog
                 }
             }
-            
+
             CommandGroup(after: .newItem) {
                 Button("Connect to Device") {
                     // Connection action
                 }
                 .keyboardShortcut("k", modifiers: .command)
-                
+
                 Divider()
-                
+
                 Button("Refresh Local Files") {
                     // Refresh action
                 }
                 .keyboardShortcut("r", modifiers: .command)
             }
         }
+    }
+}
+
+class AppDelegate: ObservableObject {
+    @Published var isReady = false
+    private var statusBar: AppKitStatusBar?
+
+    init() {
+        setupStatusBar()
+        isReady = true
+    }
+
+    private func setupStatusBar() {
+        statusBar = AppKitStatusBar()
     }
 }

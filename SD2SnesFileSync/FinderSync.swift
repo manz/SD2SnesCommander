@@ -7,6 +7,7 @@ import SD2snesCommanderCore
 
 // MARK: - SD2Snes Connection Manager
 
+@MainActor
 class SD2SnesConnectionManager: ObservableObject {
     static let shared = SD2SnesConnectionManager()
 
@@ -24,7 +25,7 @@ class SD2SnesConnectionManager: ObservableObject {
         logger.info("Connecting to SD2Snes device...")
 
         try await usbClient.connect()
-        isConnected = usbClient.isConnected
+        isConnected = await usbClient.isConnected
         currentPath = ""
         await refreshFiles()
 
@@ -34,18 +35,15 @@ class SD2SnesConnectionManager: ObservableObject {
         logger.info("Connected to SD2Snes device")
     }
 
-    func disconnect() {
+    func disconnect() async {
         logger.info("Disconnecting from SD2Snes device")
-        Task {
-            await usbClient.disconnect()
-        }
+        await usbClient.disconnect()
         isConnected = false
         files = []
         currentPath = ""
         stopPeriodicRefresh()
     }
 
-    @MainActor
     func refreshFiles() async {
         guard isConnected else { return }
 
@@ -58,14 +56,12 @@ class SD2SnesConnectionManager: ObservableObject {
         }
     }
 
-    @MainActor
     func navigateToDirectory(_ dirName: String) async {
         let newPath = currentPath.isEmpty ? dirName : "\(currentPath)/\(dirName)"
         currentPath = newPath
         await refreshFiles()
     }
 
-    @MainActor
     func navigateToParent() async {
         if !currentPath.isEmpty {
             let components = currentPath.components(separatedBy: "/")
@@ -78,7 +74,6 @@ class SD2SnesConnectionManager: ObservableObject {
         }
     }
 
-    @MainActor
     func uploadFile(localPath: String, fileName: String? = nil) async throws {
         let targetFileName = fileName ?? URL(fileURLWithPath: localPath).lastPathComponent
         let remotePath = currentPath.isEmpty ? targetFileName : "\(currentPath)/\(targetFileName)"
@@ -117,7 +112,6 @@ class SD2SnesConnectionManager: ObservableObject {
         try await usbClient.bootRom(path: romPath)
     }
 
-    @MainActor
     func deleteFile(fileName: String) async throws {
         let filePath = currentPath.isEmpty ? fileName : "\(currentPath)/\(fileName)"
         try await usbClient.deleteFile(path: filePath)
@@ -230,7 +224,8 @@ class FinderSync: FIFinderSync {
         if url.path.hasPrefix(sd2snesURL.path) {
             // User is viewing the SD2Snes directory or subdirectory
             Task { @MainActor in
-                if !self.connectionManager.isConnected {
+                let isConnected = await self.connectionManager.isConnected
+                if !isConnected {
                     // Auto-connect when user opens SD2Snes folder
                     await self.connectToSD2Snes()
                 } else {
@@ -246,11 +241,16 @@ class FinderSync: FIFinderSync {
         let relativePath = String(url.path.dropFirst(sd2snesURL.path.count))
         let cleanPath = relativePath.hasPrefix("/") ? String(relativePath.dropFirst()) : relativePath
 
-        if cleanPath != connectionManager.currentPath {
+        let currentPath = await connectionManager.currentPath
+        if cleanPath != currentPath {
             if cleanPath.isEmpty {
-                connectionManager.currentPath = ""
+                await MainActor.run {
+                    connectionManager.currentPath = ""
+                }
             } else {
-                connectionManager.currentPath = cleanPath
+                await MainActor.run {
+                    connectionManager.currentPath = cleanPath
+                }
             }
             await connectionManager.refreshFiles()
         }
@@ -272,9 +272,11 @@ class FinderSync: FIFinderSync {
         if isRomFile {
             FIFinderSyncController.default().setBadgeIdentifier("rom", for: url)
         } else if fileName == "SD2Snes" || url == sd2snesURL {
-            // Badge for the main directory based on connection status
-            let badgeId = connectionManager.isConnected ? "connected" : "disconnected"
-            FIFinderSyncController.default().setBadgeIdentifier(badgeId, for: url)
+            // Badge for the main directory - will be updated asynchronously
+            Task { @MainActor in
+                let badgeId = await self.connectionManager.isConnected ? "connected" : "disconnected"
+                FIFinderSyncController.default().setBadgeIdentifier(badgeId, for: url)
+            }
         }
     }
 
@@ -370,13 +372,12 @@ class FinderSync: FIFinderSync {
     private func contextMenuForContainer() -> NSMenu {
         let menu = NSMenu(title: "")
 
-        if connectionManager.isConnected {
-            menu.addItem(NSMenuItem(title: "Refresh", action: #selector(refreshFiles(_:)), keyEquivalent: ""))
-            menu.addItem(NSMenuItem.separator())
-            menu.addItem(NSMenuItem(title: "Disconnect", action: #selector(disconnectFromSD2Snes(_:)), keyEquivalent: ""))
-        } else {
-            menu.addItem(NSMenuItem(title: "Connect to SD2Snes", action: #selector(connectToSD2Snes(_:)), keyEquivalent: ""))
-        }
+        // Since we can't access main actor properties synchronously from background queue,
+        // we'll create a menu with both options and let actions handle the logic
+        menu.addItem(NSMenuItem(title: "Connect to SD2Snes", action: #selector(connectToSD2Snes(_:)), keyEquivalent: ""))
+        menu.addItem(NSMenuItem(title: "Refresh", action: #selector(refreshFiles(_:)), keyEquivalent: ""))
+        menu.addItem(NSMenuItem.separator())
+        menu.addItem(NSMenuItem(title: "Disconnect", action: #selector(disconnectFromSD2Snes(_:)), keyEquivalent: ""))
 
         return menu
     }
@@ -384,11 +385,9 @@ class FinderSync: FIFinderSync {
     private func contextMenuForSidebar() -> NSMenu {
         let menu = NSMenu(title: "")
 
-        if connectionManager.isConnected {
-            menu.addItem(NSMenuItem(title: "Disconnect", action: #selector(disconnectFromSD2Snes(_:)), keyEquivalent: ""))
-        } else {
-            menu.addItem(NSMenuItem(title: "Connect", action: #selector(connectToSD2Snes(_:)), keyEquivalent: ""))
-        }
+        // Provide both options and let actions handle the logic
+        menu.addItem(NSMenuItem(title: "Connect", action: #selector(connectToSD2Snes(_:)), keyEquivalent: ""))
+        menu.addItem(NSMenuItem(title: "Disconnect", action: #selector(disconnectFromSD2Snes(_:)), keyEquivalent: ""))
 
         return menu
     }
@@ -401,13 +400,11 @@ class FinderSync: FIFinderSync {
         menu.addItem(openFolderItem)
         menu.addItem(NSMenuItem.separator())
 
-        if connectionManager.isConnected {
-            menu.addItem(NSMenuItem(title: "Refresh Files", action: #selector(refreshFiles(_:)), keyEquivalent: ""))
-            menu.addItem(NSMenuItem.separator())
-            menu.addItem(NSMenuItem(title: "Disconnect", action: #selector(disconnectFromSD2Snes(_:)), keyEquivalent: ""))
-        } else {
-            menu.addItem(NSMenuItem(title: "Connect to SD2Snes", action: #selector(connectToSD2Snes(_:)), keyEquivalent: ""))
-        }
+        // Provide all options and let actions handle the logic
+        menu.addItem(NSMenuItem(title: "Connect to SD2Snes", action: #selector(connectToSD2Snes(_:)), keyEquivalent: ""))
+        menu.addItem(NSMenuItem(title: "Refresh Files", action: #selector(refreshFiles(_:)), keyEquivalent: ""))
+        menu.addItem(NSMenuItem.separator())
+        menu.addItem(NSMenuItem(title: "Disconnect", action: #selector(disconnectFromSD2Snes(_:)), keyEquivalent: ""))
 
         return menu
     }
@@ -416,6 +413,11 @@ class FinderSync: FIFinderSync {
 
     @objc func connectToSD2Snes(_ sender: AnyObject? = nil) {
         Task { @MainActor in
+            // Check if already connected
+            let isConnected = await connectionManager.isConnected
+            if isConnected {
+                return // Already connected, do nothing
+            }
             await connectToSD2Snes()
         }
     }
@@ -441,19 +443,31 @@ class FinderSync: FIFinderSync {
     }
 
     @objc func disconnectFromSD2Snes(_ sender: AnyObject? = nil) {
-        connectionManager.disconnect()
+        Task { @MainActor in
+            // Check if already disconnected
+            let isConnected = await connectionManager.isConnected
+            if !isConnected {
+                return // Already disconnected, do nothing
+            }
 
-        // Update badges
-        FIFinderSyncController.default().setBadgeIdentifier("disconnected", for: sd2snesURL)
+            await connectionManager.disconnect()
 
-        // Refresh finder view
-        refreshFinderView()
+            // Update badges
+            FIFinderSyncController.default().setBadgeIdentifier("disconnected", for: sd2snesURL)
+
+            // Refresh finder view
+            refreshFinderView()
+        }
     }
 
     @objc func refreshFiles(_ sender: AnyObject? = nil) {
         Task { @MainActor in
-            await connectionManager.refreshFiles()
-            refreshFinderView()
+            // Only refresh if connected
+            let isConnected = await connectionManager.isConnected
+            if isConnected {
+                await connectionManager.refreshFiles()
+                refreshFinderView()
+            }
         }
     }
 
@@ -509,10 +523,11 @@ class FinderSync: FIFinderSync {
 
     private func refreshFinderView() {
         // Force Finder to refresh the view by requesting badge updates
-        DispatchQueue.main.async {
+        Task { @MainActor in
             // Request badge updates for the main directory and files
             self.requestBadgeIdentifier(for: self.sd2snesURL)
-            for file in self.connectionManager.files {
+            let files = await self.connectionManager.files
+            for file in files {
                 let fileURL = self.sd2snesURL.appendingPathComponent(file.name)
                 self.requestBadgeIdentifier(for: fileURL)
             }
@@ -538,7 +553,8 @@ class FinderSync: FIFinderSync {
     private func uploadFileToSD2Snes(localURL: URL) async {
         logger.info("Uploading file: \(localURL.path)")
 
-        guard connectionManager.isConnected else {
+        let isConnected = await connectionManager.isConnected
+        guard isConnected else {
             DispatchQueue.main.async {
                 self.showAlert(title: "Not Connected", message: "Please connect to SD2Snes first")
             }
@@ -564,7 +580,7 @@ class FinderSync: FIFinderSync {
     private func downloadFileFromSD2Snes(remoteURL: URL) async {
         logger.info("Downloading file from SD2Snes: \(remoteURL.lastPathComponent)")
 
-        guard connectionManager.isConnected else {
+        guard await connectionManager.isConnected else {
             showAlert(title: "Not Connected", message: "Please connect to SD2Snes first")
             return
         }
@@ -590,7 +606,7 @@ class FinderSync: FIFinderSync {
     private func deleteFileFromSD2Snes(remoteURL: URL) async {
         logger.info("Deleting file from SD2Snes: \(remoteURL.lastPathComponent)")
 
-        guard connectionManager.isConnected else {
+        guard await connectionManager.isConnected else {
             showAlert(title: "Not Connected", message: "Please connect to SD2Snes first")
             return
         }
@@ -632,7 +648,8 @@ class FinderSync: FIFinderSync {
         }
 
         // Create virtual files for remote files
-        for file in connectionManager.files {
+        let files = await connectionManager.files
+        for file in files {
             let virtualFileURL = sd2snesURL.appendingPathComponent(file.name)
 
             if file.isDirectory {
