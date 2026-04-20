@@ -303,17 +303,20 @@ sd2snes_error_t sd2snes_upload_file(const char* local_path,
         return SD2SNES_ERROR_PROTOCOL_ERROR;
     }
 
-    // Send file data in chunks
+    // Send file data in fixed USB_BLOCK_SIZE chunks. Firmware aggregates per
+    // block before writing — short final packet would leave it waiting.
     uint8_t buffer[USB_BLOCK_SIZE];
     long bytes_sent = 0;
 
     while (bytes_sent < file_size) {
+        memset(buffer, 0, USB_BLOCK_SIZE);
         size_t chunk_size = fread(buffer, 1, USB_BLOCK_SIZE, file);
         if (chunk_size == 0) {
             break;
         }
 
-        result = send_bulk_data(buffer, chunk_size);
+        // Always send a full block — firmware only writes file_size bytes anyway
+        result = send_bulk_data(buffer, USB_BLOCK_SIZE);
         if (result != SD2SNES_SUCCESS) {
             fclose(file);
             return result;
@@ -321,7 +324,6 @@ sd2snes_error_t sd2snes_upload_file(const char* local_path,
 
         bytes_sent += chunk_size;
 
-        // Call progress callback if provided
         if (progress_callback) {
             double progress = (double)bytes_sent / (double)file_size;
             progress_callback(progress, userdata);
