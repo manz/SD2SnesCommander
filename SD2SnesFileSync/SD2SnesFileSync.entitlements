@@ -8,8 +8,6 @@
 	<true/>
 	<key>com.apple.security.device.usb</key>
 	<true/>
-	<key>com.apple.developer.driverkit.allow-any-userspace-io</key>
-	<true/>
 	<key>com.apple.security.iokit-user-client-class</key>
 	<array>
 		<string>IOUSBDeviceUserClientV2</string>
