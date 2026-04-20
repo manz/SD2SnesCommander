@@ -86,7 +86,7 @@ typedef struct {
 } sd2snes_info_t;
 
 // Progress callback function type
-typedef void (*sd2snes_progress_callback_t)(double progress);
+typedef void (*sd2snes_progress_callback_t)(double progress, void* userdata);
 
 // Device Management Functions
 sd2snes_error_t sd2snes_connect(void);
@@ -101,7 +101,8 @@ sd2snes_error_t sd2snes_list_files(const char* path,
 
 sd2snes_error_t sd2snes_upload_file(const char* local_path,
                                     const char* remote_path,
-                                    sd2snes_progress_callback_t progress_callback);
+                                    sd2snes_progress_callback_t progress_callback,
+                                    void* userdata);
 
 #if 0
 sd2snes_error_t sd2snes_move_file(const char* source_path, const char* destination);
@@ -109,7 +110,8 @@ sd2snes_error_t sd2snes_move_file(const char* source_path, const char* destinati
 
 sd2snes_error_t sd2snes_download_file(const char* remote_path,
                                       const char* local_path,
-                                      sd2snes_progress_callback_t progress_callback);
+                                      sd2snes_progress_callback_t progress_callback,
+                                      void* userdata);
 
 sd2snes_error_t sd2snes_delete_file(const char* remote_path);
 

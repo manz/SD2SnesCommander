@@ -256,7 +256,8 @@ sd2snes_error_t sd2snes_list_files(const char* path,
 
 sd2snes_error_t sd2snes_upload_file(const char* local_path,
                                     const char* remote_path,
-                                    sd2snes_progress_callback_t progress_callback) {
+                                    sd2snes_progress_callback_t progress_callback,
+                                    void* userdata) {
     if (!g_is_connected || !local_path || !remote_path) {
         return SD2SNES_ERROR_INVALID_PARAMETER;
     }
@@ -323,7 +324,7 @@ sd2snes_error_t sd2snes_upload_file(const char* local_path,
         // Call progress callback if provided
         if (progress_callback) {
             double progress = (double)bytes_sent / (double)file_size;
-            progress_callback(progress);
+            progress_callback(progress, userdata);
         }
     }
 /*
@@ -349,7 +350,8 @@ sd2snes_error_t sd2snes_upload_file(const char* local_path,
 
 sd2snes_error_t sd2snes_download_file(const char* remote_path,
                                       const char* local_path,
-                                      sd2snes_progress_callback_t progress_callback) {
+                                      sd2snes_progress_callback_t progress_callback,
+                                      void* userdata) {
     if (!g_is_connected || !remote_path || !local_path) {
         return SD2SNES_ERROR_INVALID_PARAMETER;
     }
@@ -413,7 +415,7 @@ sd2snes_error_t sd2snes_download_file(const char* remote_path,
         // Call progress callback if provided
         if (progress_callback) {
             double progress = (double)bytes_received_total / (double)file_size;
-            progress_callback(progress);
+            progress_callback(progress, userdata);
         }
     }
 

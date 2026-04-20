@@ -82,10 +82,16 @@ public actor SD2SnesUSBClient {
         return remoteFiles
     }
 
-    public func uploadFile(localPath: String, remotePath: String) async throws {
+    public func uploadFile(
+        localPath: String,
+        remotePath: String,
+        progressHandler: (@Sendable (Double) -> Void)? = nil
+    ) async throws {
         logger.info("Uploading file from '\(localPath)' to '\(remotePath)'")
 
-        let result = sd2snes_upload_file(localPath, remotePath, nil)
+        let result = withProgressTrampoline(progressHandler) { cb, ud in
+            sd2snes_upload_file(localPath, remotePath, cb, ud)
+        }
         guard result == SD2SNES_SUCCESS else {
             logger.error("Failed to upload file: \(result.rawValue)")
             throw SD2SnesUSBError(from: result)
@@ -94,16 +100,39 @@ public actor SD2SnesUSBClient {
         logger.info("File upload completed")
     }
 
-    public func downloadFile(remotePath: String, localPath: String) async throws {
+    public func downloadFile(
+        remotePath: String,
+        localPath: String,
+        progressHandler: (@Sendable (Double) -> Void)? = nil
+    ) async throws {
         logger.info("Downloading file from '\(remotePath)' to '\(localPath)'")
 
-        let result = sd2snes_download_file(remotePath, localPath, nil)
+        let result = withProgressTrampoline(progressHandler) { cb, ud in
+            sd2snes_download_file(remotePath, localPath, cb, ud)
+        }
         guard result == SD2SNES_SUCCESS else {
             logger.error("Failed to download file: \(result.rawValue)")
             throw SD2SnesUSBError(from: result)
         }
 
         logger.info("File download completed")
+    }
+
+    private func withProgressTrampoline(
+        _ handler: (@Sendable (Double) -> Void)?,
+        _ body: (sd2snes_progress_callback_t?, UnsafeMutableRawPointer?) -> sd2snes_error_t
+    ) -> sd2snes_error_t {
+        guard let handler else {
+            return body(nil, nil)
+        }
+        let box = Unmanaged.passRetained(ProgressBox(handler: handler))
+        defer { box.release() }
+        let trampoline: sd2snes_progress_callback_t = { progress, userdata in
+            guard let userdata else { return }
+            let box = Unmanaged<ProgressBox>.fromOpaque(userdata).takeUnretainedValue()
+            box.handler(progress)
+        }
+        return body(trampoline, box.toOpaque())
     }
 
     public func deleteFile(path: String) async throws {
@@ -190,4 +219,9 @@ public struct RemoteInfo {
             }
         }
     }
+}
+
+private final class ProgressBox: @unchecked Sendable {
+    let handler: @Sendable (Double) -> Void
+    init(handler: @escaping @Sendable (Double) -> Void) { self.handler = handler }
 }

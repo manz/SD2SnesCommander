@@ -39,10 +39,16 @@ extension MainViewModel {
 
                 try await usbClient.uploadFile(
                     localPath: actualFilePath,
-                    remotePath: fullRemotePath
+                    remotePath: fullRemotePath,
+                    progressHandler: { [weak self] progress in
+                        Task { @MainActor in
+                            self?.transferProgress = progress
+                        }
+                    }
                 )
 
                 transferStatus = "Upload completed"
+                transferProgress = 1.0
                 await refreshRemoteFiles()
 
                 if let tempPath = tempFilePath {
@@ -82,10 +88,16 @@ extension MainViewModel {
 
                 try await usbClient.downloadFile(
                     remotePath: fullRemotePath,
-                    localPath: url.path
+                    localPath: url.path,
+                    progressHandler: { [weak self] progress in
+                        Task { @MainActor in
+                            self?.transferProgress = progress
+                        }
+                    }
                 )
 
                 transferStatus = "Download completed"
+                transferProgress = 1.0
 
                 try await Task.sleep(nanoseconds: 2_000_000_000)
                 isTransferInProgress = false
