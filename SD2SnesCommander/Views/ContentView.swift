@@ -3,7 +3,7 @@ import UniformTypeIdentifiers
 import SD2snesCommanderCore
 
 struct ContentView: View {
-    @StateObject private var appState = AppState.shared
+    @State private var appState = AppState.shared
 
     private var viewModel: MainViewModel {
         appState.mainViewModel
@@ -61,7 +61,7 @@ struct ContentView: View {
 }
 
 struct LocalFilesView: View {
-    @ObservedObject var viewModel: MainViewModel
+    let viewModel: MainViewModel
     
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -86,7 +86,7 @@ struct LocalFilesView: View {
                             .fill(
                                 viewModel.selectedLocalFile == file.name
                                     ? Color.accentColor.opacity(0.3)
-                                    : (index % 2 == 0 ? Color.white : Color.gray.opacity(0.1))
+                                    : (index % 2 == 0 ? Color(NSColor.controlBackgroundColor) : Color(NSColor.alternatingContentBackgroundColors[1]))
                             )
                     )
                     .listRowSeparator(.hidden)
@@ -100,13 +100,13 @@ struct LocalFilesView: View {
                     }
             }
             .listStyle(.plain)
-            .background(Color.white)
+            .background(Color(NSColor.controlBackgroundColor))
         }
     }
 }
 
 struct RemoteFilesView: View {
-    @ObservedObject var viewModel: MainViewModel
+    let viewModel: MainViewModel
     @State private var isDropTargeted = false
 
     var body: some View {
@@ -157,7 +157,7 @@ struct RemoteFilesView: View {
                                 .fill(
                                     viewModel.selectedRemoteFile == file.name
                                         ? Color.accentColor.opacity(0.3)
-                                        : (index % 2 == 0 ? Color.white : Color.gray.opacity(0.1))
+                                        : (index % 2 == 0 ? Color(NSColor.controlBackgroundColor) : Color(NSColor.alternatingContentBackgroundColors[1]))
                                 )
                         )
                         .listRowSeparator(.hidden)
@@ -171,7 +171,7 @@ struct RemoteFilesView: View {
                         }
                 }
                 .listStyle(.plain)
-                .background(isDropTargeted ? Color.accentColor.opacity(0.1) : Color.white)
+                .background(isDropTargeted ? Color.accentColor.opacity(0.1) : Color(NSColor.controlBackgroundColor))
                 .overlay(
                     RoundedRectangle(cornerRadius: 8)
                         .stroke(isDropTargeted ? Color.accentColor : Color.clear, lineWidth: 2)
@@ -240,7 +240,7 @@ struct RemoteFilesView: View {
 
 struct LocalFileRow: View {
     let file: LocalFileItem
-    @ObservedObject var viewModel: MainViewModel
+    let viewModel: MainViewModel
 
     var body: some View {
         HStack {
@@ -283,7 +283,7 @@ struct LocalFileRow: View {
 
 struct RemoteFileRow: View {
     let file: RemoteFileItem
-    @ObservedObject var viewModel: MainViewModel
+    let viewModel: MainViewModel
 
     var body: some View {
         HStack {
