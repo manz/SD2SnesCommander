@@ -81,6 +81,7 @@ struct LocalFilesView: View {
             // File list
             List(Array(viewModel.localFiles.enumerated()), id: \.element.path) { index, file in
                 LocalFileRow(file: file, viewModel: viewModel)
+                    .contentShape(Rectangle())
                     .listRowBackground(
                         RoundedRectangle(cornerRadius: 0)
                             .fill(
@@ -90,13 +91,13 @@ struct LocalFilesView: View {
                             )
                     )
                     .listRowSeparator(.hidden)
-                    .onTapGesture {
-                        viewModel.selectLocalFile(file.name)
-                    }
                     .onTapGesture(count: 2) {
                         if file.isDirectory {
                             viewModel.openDirectory(file)
                         }
+                    }
+                    .onTapGesture {
+                        viewModel.selectLocalFile(file.name)
                     }
             }
             .listStyle(.plain)
@@ -152,6 +153,7 @@ struct RemoteFilesView: View {
                 // File list with drag and drop
                 List(Array(viewModel.remoteFiles.enumerated()), id: \.element.name) { index, file in
                     RemoteFileRow(file: file, viewModel: viewModel)
+                        .contentShape(Rectangle())
                         .listRowBackground(
                             RoundedRectangle(cornerRadius: 0)
                                 .fill(
@@ -161,13 +163,13 @@ struct RemoteFilesView: View {
                                 )
                         )
                         .listRowSeparator(.hidden)
-                        .onTapGesture {
-                            viewModel.selectRemoteFile(file.name)
-                        }
                         .onTapGesture(count: 2) {
                             if file.isDirectory {
                                 viewModel.openRemoteDirectory(file)
                             }
+                        }
+                        .onTapGesture {
+                            viewModel.selectRemoteFile(file.name)
                         }
                 }
                 .listStyle(.plain)
