@@ -1,10 +1,12 @@
 import SwiftUI
-import Combine
+import Observation
 
-class AppState: ObservableObject {
+@MainActor
+@Observable
+class AppState {
     static let shared = AppState()
 
-    @Published var mainViewModel: MainViewModel
+    let mainViewModel: MainViewModel
 
     private init() {
         mainViewModel = MainViewModel()

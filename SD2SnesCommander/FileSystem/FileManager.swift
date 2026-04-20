@@ -7,7 +7,8 @@ class LocalFileManager {
     
     // MARK: - File Browser Operations
     
-    func browseForDirectory(completion: @escaping (URL?) -> Void) {
+    @MainActor
+    func browseForDirectory() async -> URL? {
         let panel = NSOpenPanel()
         panel.canChooseFiles = false
         panel.canChooseDirectories = true
@@ -15,49 +16,45 @@ class LocalFileManager {
         panel.canCreateDirectories = true
         panel.title = "Choose Directory"
         panel.prompt = "Select"
-        
-        panel.begin { response in
-            if response == .OK, let url = panel.url {
-                completion(url)
-            } else {
-                completion(nil)
+
+        return await withCheckedContinuation { continuation in
+            panel.begin { response in
+                continuation.resume(returning: response == .OK ? panel.url : nil)
             }
         }
     }
-    
-    func browseForFile(allowedTypes: [String] = [], completion: @escaping (URL?) -> Void) {
+
+    @MainActor
+    func browseForFile(allowedTypes: [String] = []) async -> URL? {
         let panel = NSOpenPanel()
         panel.canChooseFiles = true
         panel.canChooseDirectories = false
         panel.allowsMultipleSelection = false
         panel.title = "Choose File"
         panel.prompt = "Select"
-        
+
         if !allowedTypes.isEmpty {
             panel.allowedContentTypes = allowedTypes.compactMap { UTType(filenameExtension: $0) }
         }
-        
-        panel.begin { response in
-            if response == .OK, let url = panel.url {
-                completion(url)
-            } else {
-                completion(nil)
+
+        return await withCheckedContinuation { continuation in
+            panel.begin { response in
+                continuation.resume(returning: response == .OK ? panel.url : nil)
             }
         }
     }
-    
-    func saveFile(suggestedName: String, completion: @escaping (URL?) -> Void) {
+
+    @MainActor
+    func saveFile(suggestedName: String) async -> URL? {
         let panel = NSSavePanel()
         panel.nameFieldStringValue = suggestedName
         panel.title = "Save File"
         panel.prompt = "Save"
         panel.canCreateDirectories = true
-        
-        panel.begin { response in
-            if response == .OK, let url = panel.url {
-                completion(url)
-            } else {
-                completion(nil)
+
+        return await withCheckedContinuation { continuation in
+            panel.begin { response in
+                continuation.resume(returning: response == .OK ? panel.url : nil)
             }
         }
     }

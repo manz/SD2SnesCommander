@@ -1,23 +1,24 @@
 import Cocoa
 import FinderSync
 import Foundation
-import Combine
+import Observation
 import os.log
 import SD2snesCommanderCore
 
 // MARK: - SD2Snes Connection Manager
 
 @MainActor
-class SD2SnesConnectionManager: ObservableObject {
+@Observable
+class SD2SnesConnectionManager {
     static let shared = SD2SnesConnectionManager()
 
-    @Published var isConnected = false
-    @Published var currentPath = ""
-    @Published var files: [RemoteFileItem] = []
+    var isConnected = false
+    var currentPath = ""
+    var files: [RemoteFileItem] = []
 
-    private let logger = Logger(subsystem: "SD2SnesFileSync", category: "Connection")
-    private let usbClient = SD2SnesUSBClient()
-    private var refreshTimer: Timer?
+    @ObservationIgnored private let logger = Logger(subsystem: "SD2SnesFileSync", category: "Connection")
+    @ObservationIgnored private let usbClient = SD2SnesUSBClient()
+    @ObservationIgnored private var refreshTask: Task<Void, Never>?
 
     private init() {}
 
@@ -123,21 +124,25 @@ class SD2SnesConnectionManager: ObservableObject {
     }
 
     private func startPeriodicRefresh() {
-        refreshTimer = Timer.scheduledTimer(withTimeInterval: 10.0, repeats: true) { _ in
-            Task { @MainActor in
-                await self.refreshFiles()
+        refreshTask?.cancel()
+        refreshTask = Task { [weak self] in
+            while !Task.isCancelled {
+                try? await Task.sleep(nanoseconds: 10_000_000_000)
+                guard !Task.isCancelled else { return }
+                await self?.refreshFiles()
             }
         }
     }
 
     private func stopPeriodicRefresh() {
-        refreshTimer?.invalidate()
-        refreshTimer = nil
+        refreshTask?.cancel()
+        refreshTask = nil
     }
 }
 
 // MARK: - Finder Sync Extension
 
+@MainActor
 class FinderSync: FIFinderSync {
     private let logger = Logger(subsystem: "SD2SnesFileSync", category: "FinderSync")
     private let connectionManager = SD2SnesConnectionManager.shared
@@ -222,14 +227,10 @@ class FinderSync: FIFinderSync {
         logger.info("Begin observing directory: \(url.path)")
 
         if url.path.hasPrefix(sd2snesURL.path) {
-            // User is viewing the SD2Snes directory or subdirectory
             Task { @MainActor in
-                let isConnected = await self.connectionManager.isConnected
-                if !isConnected {
-                    // Auto-connect when user opens SD2Snes folder
+                if !self.connectionManager.isConnected {
                     await self.connectToSD2Snes()
                 } else {
-                    // Update current path based on viewed directory
                     await self.updateCurrentPathFromURL(url)
                     await self.updateVirtualFileSystem()
                 }
@@ -237,21 +238,13 @@ class FinderSync: FIFinderSync {
         }
     }
 
+    @MainActor
     private func updateCurrentPathFromURL(_ url: URL) async {
         let relativePath = String(url.path.dropFirst(sd2snesURL.path.count))
         let cleanPath = relativePath.hasPrefix("/") ? String(relativePath.dropFirst()) : relativePath
 
-        let currentPath = await connectionManager.currentPath
-        if cleanPath != currentPath {
-            if cleanPath.isEmpty {
-                await MainActor.run {
-                    connectionManager.currentPath = ""
-                }
-            } else {
-                await MainActor.run {
-                    connectionManager.currentPath = cleanPath
-                }
-            }
+        if cleanPath != connectionManager.currentPath {
+            connectionManager.currentPath = cleanPath
             await connectionManager.refreshFiles()
         }
     }
@@ -272,9 +265,8 @@ class FinderSync: FIFinderSync {
         if isRomFile {
             FIFinderSyncController.default().setBadgeIdentifier("rom", for: url)
         } else if fileName == "SD2Snes" || url == sd2snesURL {
-            // Badge for the main directory - will be updated asynchronously
             Task { @MainActor in
-                let badgeId = await self.connectionManager.isConnected ? "connected" : "disconnected"
+                let badgeId = self.connectionManager.isConnected ? "connected" : "disconnected"
                 FIFinderSyncController.default().setBadgeIdentifier(badgeId, for: url)
             }
         }
@@ -413,11 +405,7 @@ class FinderSync: FIFinderSync {
 
     @objc func connectToSD2Snes(_ sender: AnyObject? = nil) {
         Task { @MainActor in
-            // Check if already connected
-            let isConnected = await connectionManager.isConnected
-            if isConnected {
-                return // Already connected, do nothing
-            }
+            if connectionManager.isConnected { return }
             await connectToSD2Snes()
         }
     }
@@ -444,27 +432,18 @@ class FinderSync: FIFinderSync {
 
     @objc func disconnectFromSD2Snes(_ sender: AnyObject? = nil) {
         Task { @MainActor in
-            // Check if already disconnected
-            let isConnected = await connectionManager.isConnected
-            if !isConnected {
-                return // Already disconnected, do nothing
-            }
+            if !connectionManager.isConnected { return }
 
             await connectionManager.disconnect()
 
-            // Update badges
             FIFinderSyncController.default().setBadgeIdentifier("disconnected", for: sd2snesURL)
-
-            // Refresh finder view
             refreshFinderView()
         }
     }
 
     @objc func refreshFiles(_ sender: AnyObject? = nil) {
         Task { @MainActor in
-            // Only refresh if connected
-            let isConnected = await connectionManager.isConnected
-            if isConnected {
+            if connectionManager.isConnected {
                 await connectionManager.refreshFiles()
                 refreshFinderView()
             }
@@ -522,11 +501,9 @@ class FinderSync: FIFinderSync {
     }
 
     private func refreshFinderView() {
-        // Force Finder to refresh the view by requesting badge updates
         Task { @MainActor in
-            // Request badge updates for the main directory and files
             self.requestBadgeIdentifier(for: self.sd2snesURL)
-            let files = await self.connectionManager.files
+            let files = self.connectionManager.files
             for file in files {
                 let fileURL = self.sd2snesURL.appendingPathComponent(file.name)
                 self.requestBadgeIdentifier(for: fileURL)
@@ -534,45 +511,35 @@ class FinderSync: FIFinderSync {
         }
     }
 
+    @MainActor
     private func bootROMFile(path: String) async {
         logger.info("Booting ROM: \(path)")
 
         do {
             try await connectionManager.bootROM(fileName: URL(fileURLWithPath: path).lastPathComponent)
-            DispatchQueue.main.async {
-                self.showAlert(title: "ROM Boot", message: "Successfully booted ROM: \(path)")
-            }
+            showAlert(title: "ROM Boot", message: "Successfully booted ROM: \(path)")
         } catch {
             logger.error("Failed to boot ROM: \(error)")
-            DispatchQueue.main.async {
-                self.showAlert(title: "Boot Failed", message: "Failed to boot ROM: \(error.localizedDescription)")
-            }
+            showAlert(title: "Boot Failed", message: "Failed to boot ROM: \(error.localizedDescription)")
         }
     }
 
+    @MainActor
     private func uploadFileToSD2Snes(localURL: URL) async {
         logger.info("Uploading file: \(localURL.path)")
 
-        let isConnected = await connectionManager.isConnected
-        guard isConnected else {
-            DispatchQueue.main.async {
-                self.showAlert(title: "Not Connected", message: "Please connect to SD2Snes first")
-            }
+        guard connectionManager.isConnected else {
+            showAlert(title: "Not Connected", message: "Please connect to SD2Snes first")
             return
         }
 
         do {
             try await connectionManager.uploadFile(localPath: localURL.path)
-            DispatchQueue.main.async {
-                self.showAlert(title: "Upload Complete", message: "Successfully uploaded: \(localURL.lastPathComponent)")
-            }
-            // Update the virtual file system
+            showAlert(title: "Upload Complete", message: "Successfully uploaded: \(localURL.lastPathComponent)")
             await updateVirtualFileSystem()
         } catch {
             logger.error("Failed to upload file: \(error)")
-            DispatchQueue.main.async {
-                self.showAlert(title: "Upload Failed", message: "Failed to upload: \(error.localizedDescription)")
-            }
+            showAlert(title: "Upload Failed", message: "Failed to upload: \(error.localizedDescription)")
         }
     }
 
@@ -580,7 +547,7 @@ class FinderSync: FIFinderSync {
     private func downloadFileFromSD2Snes(remoteURL: URL) async {
         logger.info("Downloading file from SD2Snes: \(remoteURL.lastPathComponent)")
 
-        guard await connectionManager.isConnected else {
+        guard connectionManager.isConnected else {
             showAlert(title: "Not Connected", message: "Please connect to SD2Snes first")
             return
         }
@@ -606,7 +573,7 @@ class FinderSync: FIFinderSync {
     private func deleteFileFromSD2Snes(remoteURL: URL) async {
         logger.info("Deleting file from SD2Snes: \(remoteURL.lastPathComponent)")
 
-        guard await connectionManager.isConnected else {
+        guard connectionManager.isConnected else {
             showAlert(title: "Not Connected", message: "Please connect to SD2Snes first")
             return
         }
@@ -633,11 +600,10 @@ class FinderSync: FIFinderSync {
 
     // MARK: - Virtual File System Management
 
+    @MainActor
     private func updateVirtualFileSystem() async {
-        // Create virtual files that represent the remote files
         let fileManager = FileManager.default
 
-        // Clear existing virtual files (except .DS_Store and system files)
         if let existingFiles = try? fileManager.contentsOfDirectory(atPath: sd2snesURL.path) {
             for file in existingFiles {
                 if !file.hasPrefix(".") {
@@ -647,8 +613,7 @@ class FinderSync: FIFinderSync {
             }
         }
 
-        // Create virtual files for remote files
-        let files = await connectionManager.files
+        let files = connectionManager.files
         for file in files {
             let virtualFileURL = sd2snesURL.appendingPathComponent(file.name)
 

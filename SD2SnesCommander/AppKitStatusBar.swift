@@ -1,29 +1,26 @@
 import AppKit
 import SwiftUI
-import Combine
+import Observation
 
+@MainActor
 class AppKitStatusBar {
     private var statusItem: NSStatusItem?
     private var menu: NSMenu?
     private let statusBarManager = StatusBarManager()
-    private var cancellables = Set<AnyCancellable>()
 
     init() {
         setupStatusBar()
-        setupStatusObservation()
+        startObserving()
     }
 
     private func setupStatusBar() {
-        // Create status item
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
 
         if let button = statusItem?.button {
-            // Set icon
             button.image = NSImage(systemSymbolName: "externaldrive.connected.to.line.below",
                                  accessibilityDescription: "SD2Snes Commander")
         }
 
-        // Create menu
         setupMenu()
         statusItem?.menu = menu
     }
@@ -38,7 +35,6 @@ class AppKitStatusBar {
 
         menu.removeAllItems()
 
-        // Connection status (non-clickable)
         let statusItem = NSMenuItem()
         statusItem.title = statusBarManager.isConnected ?
             "✅ Connected to \(statusBarManager.deviceName)" :
@@ -48,7 +44,6 @@ class AppKitStatusBar {
 
         menu.addItem(NSMenuItem.separator())
 
-        // Connection actions
         if statusBarManager.isConnected {
             let disconnectItem = NSMenuItem(title: "Disconnect", action: #selector(disconnectAction), keyEquivalent: "")
             disconnectItem.target = self
@@ -65,54 +60,35 @@ class AppKitStatusBar {
 
         menu.addItem(NSMenuItem.separator())
 
-        // Show main window
         let showWindowItem = NSMenuItem(title: "Show Main Window", action: #selector(showMainWindowAction), keyEquivalent: "")
         showWindowItem.target = self
         menu.addItem(showWindowItem)
 
         menu.addItem(NSMenuItem.separator())
 
-        // Quit
         let quitItem = NSMenuItem(title: "Quit SD2Snes Commander", action: #selector(quitAction), keyEquivalent: "q")
         quitItem.target = self
         menu.addItem(quitItem)
     }
 
-    @objc private func connectAction() {
-        statusBarManager.connectToDevice()
-    }
+    @objc private func connectAction() { statusBarManager.connectToDevice() }
+    @objc private func disconnectAction() { statusBarManager.disconnectFromDevice() }
+    @objc private func resetAction() { statusBarManager.resetDevice() }
+    @objc private func showMainWindowAction() { statusBarManager.showMainWindow() }
+    @objc private func quitAction() { NSApplication.shared.terminate(nil) }
 
-    @objc private func disconnectAction() {
-        statusBarManager.disconnectFromDevice()
-    }
-
-    @objc private func resetAction() {
-        statusBarManager.resetDevice()
-    }
-
-    @objc private func showMainWindowAction() {
-        statusBarManager.showMainWindow()
-    }
-
-    @objc private func quitAction() {
-        NSApplication.shared.terminate(nil)
-    }
-
-    private func setupStatusObservation() {
-        statusBarManager.$isConnected
-            .receive(on: DispatchQueue.main)
-            .sink { [weak self] isConnected in
-                self?.updateIcon(connected: isConnected)
-                self?.updateMenuItems()
+    private func startObserving() {
+        withObservationTracking {
+            _ = statusBarManager.isConnected
+            _ = statusBarManager.deviceName
+        } onChange: { [weak self] in
+            Task { @MainActor [weak self] in
+                guard let self else { return }
+                self.updateIcon(connected: self.statusBarManager.isConnected)
+                self.updateMenuItems()
+                self.startObserving()
             }
-            .store(in: &cancellables)
-
-        statusBarManager.$deviceName
-            .receive(on: DispatchQueue.main)
-            .sink { [weak self] _ in
-                self?.updateMenuItems()
-            }
-            .store(in: &cancellables)
+        }
     }
 
     func updateIcon(connected: Bool) {

@@ -1,5 +1,5 @@
 import Testing
-@testable import QFile2Snes
+@testable import SD2SnesCommander
 
 struct SD2SnesCommanderTests {
 

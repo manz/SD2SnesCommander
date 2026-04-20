@@ -1,11 +1,10 @@
 import SwiftUI
 
 struct MenuBarView: View {
-    @EnvironmentObject var statusBarManager: StatusBarManager
+    @Environment(StatusBarManager.self) private var statusBarManager
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            // Header
             HStack {
                 Image(systemName: "externaldrive.connected.to.line.below")
                     .foregroundColor(.blue)
@@ -16,7 +15,6 @@ struct MenuBarView: View {
 
             Divider()
 
-            // Connection Status
             HStack {
                 Circle()
                     .fill(statusBarManager.isConnected ? .green : .red)
@@ -34,7 +32,6 @@ struct MenuBarView: View {
 
             Divider()
 
-            // Quick Actions
             VStack(alignment: .leading, spacing: 6) {
                 if statusBarManager.isConnected {
                     Button("Disconnect") {
@@ -56,7 +53,6 @@ struct MenuBarView: View {
 
             Divider()
 
-            // Quit
             Button("Quit SD2Snes Commander") {
                 NSApplication.shared.terminate(nil)
             }
@@ -69,5 +65,5 @@ struct MenuBarView: View {
 
 #Preview {
     MenuBarView()
-        .environmentObject(StatusBarManager())
+        .environment(StatusBarManager())
 }

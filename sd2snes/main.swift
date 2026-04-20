@@ -162,7 +162,5 @@ struct SD2SnesCLI {
     }
 }
 
-Task {
-    await SD2SnesCLI.main()
-}
+await SD2SnesCLI.main()
 

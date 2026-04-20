@@ -8,9 +8,7 @@ public actor SD2SnesUSBClient {
     public init() {}
 
     deinit {
-        Task { [weak self] in
-            await self?.disconnect()
-        }
+        sd2snes_disconnect()
     }
 
     // MARK: - Connection Management
@@ -84,7 +82,7 @@ public actor SD2SnesUSBClient {
         return remoteFiles
     }
 
-    public func uploadFile(localPath: String, remotePath: String, progressHandler: @escaping (Double) -> Void = { _ in }) async throws {
+    public func uploadFile(localPath: String, remotePath: String) async throws {
         logger.info("Uploading file from '\(localPath)' to '\(remotePath)'")
 
         let result = sd2snes_upload_file(localPath, remotePath, nil)
@@ -96,7 +94,7 @@ public actor SD2SnesUSBClient {
         logger.info("File upload completed")
     }
 
-    public func downloadFile(remotePath: String, localPath: String, progressHandler: @escaping (Double) -> Void = { _ in }) async throws {
+    public func downloadFile(remotePath: String, localPath: String) async throws {
         logger.info("Downloading file from '\(remotePath)' to '\(localPath)'")
 
         let result = sd2snes_download_file(remotePath, localPath, nil)
