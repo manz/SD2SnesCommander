@@ -149,101 +149,105 @@ sd2snes_error_t sd2snes_list_files(const char* path,
         return result;
     }
 
-    // Receive response
+    // Receive response header (total_size is a placeholder for LS — ignore)
     result = receive_response(response_buffer, &response_size);
     if (result != SD2SNES_SUCCESS) {
         return result;
     }
 
-    // Check for error in response
     if (response_buffer[5] != 0) {
         return SD2SNES_ERROR_PROTOCOL_ERROR;
     }
 
-    // Parse file list from response data
     *file_count = 0;
-    if (response_size > USB_BLOCK_SIZE) {
-        // Receive additional data containing file list
-        uint8_t* file_data = malloc(response_size - USB_BLOCK_SIZE);
-        if (!file_data) {
-            return SD2SNES_ERROR_FILE_ERROR;
-        }
 
-        uint32_t bytes_received;
-        result = receive_bulk_data(file_data, response_size - USB_BLOCK_SIZE, &bytes_received);
+    // Pending partial name from previous block (type 2 = continuation)
+    char partial_name[512] = {0};
+    size_t partial_len = 0;
+    uint8_t partial_type = 0;
+    int has_partial = 0;
+
+    // Stream entry blocks until 0xFF terminator
+    int done = 0;
+    while (!done && *file_count < max_files) {
+        uint8_t block[USB_BLOCK_SIZE];
+        uint32_t bytes_received = 0;
+        result = receive_bulk_data(block, USB_BLOCK_SIZE, &bytes_received);
         if (result != SD2SNES_SUCCESS) {
-            free(file_data);
             return result;
         }
 
-        // Parse file entries
         uint32_t offset = 0;
-        printf("[SD2SNES] Parsing %u bytes of file data...\n", bytes_received);
-
         while (offset < bytes_received && *file_count < max_files) {
-            // Check for end marker
-            if (offset >= bytes_received || file_data[offset] == 0xFF) {
-                printf("[SD2SNES] End marker found at offset %u\n", offset);
-                break;
-            }
-
-            // Ensure we have enough data for type, flags, and size
-            if (offset + 6 > bytes_received) {
-                printf("[SD2SNES] Not enough data for header at offset %u\n", offset);
-                break;
-            }
-
-            uint8_t type = file_data[offset];
-
-            printf("[SD2SNES] Entry %zu: type=0x%02x, flags=0x%02x, size=%u\n", *file_count, type); //flags, size);
+            uint8_t type = block[offset];
+            if (type == 0xFF) { done = 1; break; }
 
             offset += 1;
 
-            // Find null terminator for filename
             uint32_t name_end = offset;
-            while (name_end < bytes_received && file_data[name_end] != 0) {
+            while (name_end < bytes_received && block[name_end] != 0) {
                 name_end++;
             }
 
-            if (name_end >= bytes_received) {
-                printf("[SD2SNES] No null terminator found for filename at offset %u\n", offset);
+            uint32_t name_length = name_end - offset;
+            int name_complete = (name_end < bytes_received); // null terminator present
+
+            if (type == 2) {
+                // Continuation: append to partial, wait for next block
+                if (partial_len + name_length < sizeof(partial_name)) {
+                    memcpy(partial_name + partial_len, &block[offset], name_length);
+                    partial_len += name_length;
+                }
+                if (name_complete) {
+                    // Continuation ended this block — finalize
+                    partial_name[partial_len] = '\0';
+                    if (has_partial) {
+                        size_t copy_len = partial_len;
+                        if (copy_len >= sizeof(files[*file_count].name)) {
+                            copy_len = sizeof(files[*file_count].name) - 1;
+                        }
+                        memcpy(files[*file_count].name, partial_name, copy_len);
+                        files[*file_count].name[copy_len] = '\0';
+                        files[*file_count].size = 0;
+                        files[*file_count].is_directory = (partial_type == 0);
+                        (*file_count)++;
+                    }
+                    partial_len = 0;
+                    has_partial = 0;
+                    offset = name_end + 1;
+                    continue;
+                } else {
+                    // Wait for next block
+                    break;
+                }
+            }
+
+            // type 0 (dir) or 1 (file)
+            if (!name_complete) {
+                // Name spans block boundary without type-2 marker — treat as partial
+                if (partial_len + name_length < sizeof(partial_name)) {
+                    memcpy(partial_name, &block[offset], name_length);
+                    partial_len = name_length;
+                    partial_type = type;
+                    has_partial = 1;
+                }
                 break;
             }
 
-            // Extract filename
-            uint32_t name_length = name_end - offset;
-            printf("[SD2SNES] Raw filename length: %u bytes\n", name_length);
-            if (name_length > 0 && name_length < sizeof(files[*file_count].name)) {
-                memcpy(files[*file_count].name, &file_data[offset], name_length);
-                files[*file_count].name[name_length] = '\0';
+            if (name_length > 0) {
+                size_t copy_len = name_length;
+                if (copy_len >= sizeof(files[*file_count].name)) {
+                    copy_len = sizeof(files[*file_count].name) - 1;
+                }
+                memcpy(files[*file_count].name, &block[offset], copy_len);
+                files[*file_count].name[copy_len] = '\0';
                 files[*file_count].size = 0;
-                files[*file_count].is_directory = (type == 0x00);
-                printf("[SD2SNES] ✓ File %zu: '%s' (%s, %u bytes)\n",
-                       *file_count, files[*file_count].name,
-                       files[*file_count].is_directory ? "DIR" : "FILE",
-                       files[*file_count].size);
+                files[*file_count].is_directory = (type == 0);
                 (*file_count)++;
-            } else if (name_length > 0) {
-                // Handle truncated long filenames
-                uint32_t max_copy = sizeof(files[*file_count].name) - 1; // Leave room for null terminator
-                memcpy(files[*file_count].name, &file_data[offset], max_copy);
-                files[*file_count].name[max_copy] = '\0';
-                files[*file_count].size = 0;
-                files[*file_count].is_directory = (type == 0x00);
-                printf("[SD2SNES] ⚠️  File %zu: '%s' (TRUNCATED from %u chars, %s, %u bytes)\n",
-                       *file_count, files[*file_count].name, name_length,
-                       files[*file_count].is_directory ? "DIR" : "FILE",
-                       files[*file_count].size);
-                (*file_count)++;
-            } else {
-                printf("[SD2SNES] ❌ Skipping entry with zero-length filename\n");
             }
 
-            // Move to next entry (skip null terminator)
             offset = name_end + 1;
         }
-
-        free(file_data);
     }
 
     printf("[SD2SNES] ✅ C level complete: parsed %zu files total\n", *file_count);
@@ -566,41 +570,40 @@ sd2snes_error_t sd2snes_get_info(sd2snes_info_t *info) {
     // Send INFO command
     result = send_packet(SD2SNES_OP_INFO, SD2SNES_SPACE_FILE, SD2SNES_FLAG_NONE,
                         "", NULL, 0);
-    
     if (result != SD2SNES_SUCCESS) {
         return result;
     }
-    
 
-    
+    // Read response block (512 bytes)
+    result = receive_response(response_buffer, &response_size);
+    if (result != SD2SNES_SUCCESS) {
+        return result;
+    }
+
+    if (response_buffer[5] != 0) {
+        return SD2SNES_ERROR_PROTOCOL_ERROR;
+    }
+
     if (info) {
-          // Firmware Version 1
-          info->firmware_version = (uint16_t)(response_buffer[6] | (response_buffer[7] << 8));
-          
-          // Current Features
-          info->current_features = (uint16_t)(response_buffer[8] | (response_buffer[9] << 8));
-          
-          // Current Configuration
-          info->current_configuration = (uint16_t)(response_buffer[10] | (response_buffer[11] << 8));
-          
-          // ROM Name
-          strncpy(info->rom_name, (char*)response_buffer + 16, sizeof(info->rom_name) - 1);
-          info->rom_name[sizeof(info->rom_name) - 1] = '\0'; // Ensure null-termination
-          
-          // Firmware Version 2 (4-byte)
-          info->firmware_version2 = (uint32_t)(response_buffer[256] << 24 | response_buffer[257] << 16 | response_buffer[258] << 8 | response_buffer[259]);
-          
-          // Firmware String
-          strncpy(info->firmware_string, (char*)response_buffer + 260, sizeof(info->firmware_string) - 1);
-          info->firmware_string[sizeof(info->firmware_string) - 1] = '\0';
-          
-          // Device Name
-          strncpy(info->device_name, (char*)response_buffer + 324, sizeof(info->device_name) - 1);
-          info->device_name[sizeof(info->device_name) - 1] = '\0';
-      }
-    
-    clear_usb_pipe(g_interface_interface, 2);
-    
+        info->firmware_version      = (uint16_t)(response_buffer[6]  | (response_buffer[7]  << 8));
+        info->current_features      = (uint16_t)(response_buffer[8]  | (response_buffer[9]  << 8));
+        info->current_configuration = (uint16_t)(response_buffer[10] | (response_buffer[11] << 8));
+
+        strncpy(info->rom_name, (char*)response_buffer + 16, sizeof(info->rom_name) - 1);
+        info->rom_name[sizeof(info->rom_name) - 1] = '\0';
+
+        info->firmware_version2 = (uint32_t)(response_buffer[256] << 24 |
+                                             response_buffer[257] << 16 |
+                                             response_buffer[258] <<  8 |
+                                             response_buffer[259]);
+
+        strncpy(info->firmware_string, (char*)response_buffer + 260, sizeof(info->firmware_string) - 1);
+        info->firmware_string[sizeof(info->firmware_string) - 1] = '\0';
+
+        strncpy(info->device_name, (char*)response_buffer + 324, sizeof(info->device_name) - 1);
+        info->device_name[sizeof(info->device_name) - 1] = '\0';
+    }
+
     return SD2SNES_SUCCESS;
 }
 
@@ -882,13 +885,27 @@ static sd2snes_error_t receive_response(uint8_t* response_buffer, uint32_t* resp
         return SD2SNES_ERROR_INVALID_PARAMETER;
     }
 
-    // Receive response header
-    UInt32 size = USB_BLOCK_SIZE;
-    kern_return_t result = (*g_interface_interface)->ReadPipe(g_interface_interface, 2, response_buffer, &size);
+    // Receive response header. Skip ZLPs (zero-length packets sent by device
+    // after multiple-of-max-packet bulk transfers).
+    UInt32 size = 0;
+    int attempts = 0;
+    kern_return_t result = kIOReturnSuccess;
+    do {
+        size = USB_BLOCK_SIZE;
+        result = (*g_interface_interface)->ReadPipeTO(
+            g_interface_interface, 2, response_buffer, &size, 5000, 5000);
 
-    if (result != kIOReturnSuccess) {
-        return SD2SNES_ERROR_TRANSFER_FAILED;
-    }
+        if (result != kIOReturnSuccess) {
+            printf("[SD2SNES] receive_response ReadPipeTO failed: 0x%08x\n", result);
+            return SD2SNES_ERROR_TRANSFER_FAILED;
+        }
+        attempts++;
+    } while (size == 0 && attempts < 4);
+
+    printf("[SD2SNES] receive_response: read %u bytes (attempts=%d), first 8: %02x %02x %02x %02x %02x %02x %02x %02x\n",
+           size, attempts,
+           response_buffer[0], response_buffer[1], response_buffer[2], response_buffer[3],
+           response_buffer[4], response_buffer[5], response_buffer[6], response_buffer[7]);
 
     if (size < 8) {
         return SD2SNES_ERROR_INVALID_RESPONSE;
@@ -927,12 +944,19 @@ static sd2snes_error_t receive_bulk_data(uint8_t* buffer, uint32_t size, uint32_
         return SD2SNES_ERROR_INVALID_PARAMETER;
     }
 
-    UInt32 actual_size = size;
-    kern_return_t result = (*g_interface_interface)->ReadPipe(g_interface_interface, 2, buffer, &actual_size);
-
-    if (result != kIOReturnSuccess) {
-        return SD2SNES_ERROR_TRANSFER_FAILED;
-    }
+    UInt32 actual_size = 0;
+    int attempts = 0;
+    kern_return_t result = kIOReturnSuccess;
+    do {
+        actual_size = size;
+        result = (*g_interface_interface)->ReadPipeTO(
+            g_interface_interface, 2, buffer, &actual_size, 5000, 10000);
+        if (result != kIOReturnSuccess) {
+            printf("[SD2SNES] receive_bulk_data ReadPipeTO failed: 0x%08x\n", result);
+            return SD2SNES_ERROR_TRANSFER_FAILED;
+        }
+        attempts++;
+    } while (actual_size == 0 && attempts < 4);
 
     *bytes_received = actual_size;
     return SD2SNES_SUCCESS;
