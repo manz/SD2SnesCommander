@@ -26,6 +26,23 @@ struct ContentView: View {
                 .help(viewModel.isConnected ? "Disconnect" : "Connect to QUsb2Snes")
             }
 
+            ToolbarItemGroup(placement: .navigation) {
+                ControlGroup {
+                    Button(action: viewModel.navigateBack) {
+                        Label("Back", systemImage: "chevron.left")
+                    }
+                    .help("Go Back")
+                    .disabled(!viewModel.isConnected || !viewModel.canGoBack)
+
+                    Button(action: viewModel.navigateForward) {
+                        Label("Forward", systemImage: "chevron.right")
+                    }
+                    .help("Go Forward")
+                    .disabled(!viewModel.isConnected || !viewModel.canGoForward)
+                }
+                .controlGroupStyle(.navigation)
+            }
+
             ToolbarItemGroup(placement: .primaryAction) {
                 if viewModel.isTransferInProgress {
                     ProgressView(value: viewModel.transferProgress)

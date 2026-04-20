@@ -10,25 +10,6 @@ struct RemoteFilesView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             HStack {
-                if viewModel.isConnected {
-                    HStack(spacing: 2) {
-                        Button(action: viewModel.navigateBack) {
-                            Image(systemName: "chevron.left")
-                        }
-                        .help("Go Back")
-                        .disabled(!viewModel.canGoBack)
-                        .buttonStyle(.borderless)
-
-                        Button(action: viewModel.navigateForward) {
-                            Image(systemName: "chevron.right")
-                        }
-                        .help("Go Forward")
-                        .disabled(!viewModel.canGoForward)
-                        .buttonStyle(.borderless)
-                    }
-                    .controlSize(.regular)
-                }
-
                 Text("Device Files")
                     .font(.headline)
                 Spacer()
