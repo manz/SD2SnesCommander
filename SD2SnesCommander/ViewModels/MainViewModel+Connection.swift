@@ -18,7 +18,10 @@ extension MainViewModel {
                 deviceName = info.deviceName ?? "SD2SNES USB"
                 connectionStatus = "Connected to \(deviceName) via USB"
                 isConnected = true
+                isGaming = Self.isGamingFromRomName(info.romName)
+                currentRomName = Self.displayRomName(info.romName, gaming: isGaming)
 
+                startInfoPolling()
                 await refreshRemoteFiles()
             } catch {
                 connectionStatus = "Failed to connect"
@@ -37,9 +40,13 @@ extension MainViewModel {
     }
 
     func disconnect() {
+        infoPollTask?.cancel()
+        infoPollTask = nil
         Task {
             await usbClient.disconnect()
             isConnected = false
+            isGaming = false
+            currentRomName = nil
             connectionStatus = "Disconnected"
             deviceName = "SD2Snes Commander"
             remoteFiles = []
@@ -89,9 +96,67 @@ extension MainViewModel {
         Task {
             do {
                 try await usbClient.menu()
+                // Flip UI out of the gaming placeholder. Poll resumes
+                // (was gated on isGaming) and will refresh the file list
+                // once firmware finishes reloading the menu and INFO
+                // reports the menu path again.
+                isGaming = false
             } catch {
                 print("Failed to return to menu: \(error)")
             }
         }
+    }
+
+    // MARK: - State polling
+
+    func startInfoPolling() {
+        infoPollTask?.cancel()
+        infoPollTask = Task { [weak self] in
+            while !Task.isCancelled {
+                try? await Task.sleep(nanoseconds: 2_000_000_000)
+                guard !Task.isCancelled else { return }
+                await self?.pollInfo()
+            }
+        }
+    }
+
+    private func pollInfo() async {
+        // INFO is unreliable while a game is running — firmware services USB
+        // but CDC endpoint timing collides with SRAM bridging. Stop polling
+        // once gaming is detected; Return to Menu flips isGaming back and
+        // polling resumes.
+        guard isConnected, !isTransferInProgress, !isGaming else { return }
+        do {
+            let info = try await usbClient.info()
+            let nowGaming = Self.isGamingFromRomName(info.romName)
+            let previousRom = currentRomName
+            currentRomName = Self.displayRomName(info.romName, gaming: nowGaming)
+            let romChanged = previousRom != currentRomName
+            if nowGaming != isGaming {
+                isGaming = nowGaming
+            }
+            // Refresh file list when transitioning to menu or rom context changes.
+            if !nowGaming && (romChanged || remoteFiles.isEmpty) {
+                await refreshRemoteFiles()
+            }
+        } catch {
+            // Swallow: device may be busy mid-game. Keep prior state.
+        }
+    }
+
+    static func displayRomName(_ name: String?, gaming: Bool) -> String? {
+        guard gaming, let name, !name.isEmpty else { return nil }
+        let last = (name as NSString).lastPathComponent
+        return last.isEmpty ? name : last
+    }
+
+    static func isGamingFromRomName(_ name: String?) -> Bool {
+        guard let name, !name.isEmpty else { return false }
+        let lower = name.lowercased()
+        // Menu sentinels: /sd2snes/m3nu.bin (Mk3), /sd2snes/menu.bin (Mk2)
+        if lower.hasSuffix("m3nu.bin") || lower.hasSuffix("menu.bin") {
+            return false
+        }
+        return true
     }
 }

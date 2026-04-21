@@ -60,7 +60,7 @@ struct LocalFileRow: View {
 
             Spacer()
 
-            if !file.isDirectory && viewModel.isConnected {
+            if !file.isDirectory && viewModel.isConnected && !viewModel.isGaming {
                 Button("Upload") {
                     viewModel.uploadFile(file)
                 }
@@ -77,7 +77,7 @@ struct LocalFileRow: View {
                 Button("Upload to Device") {
                     viewModel.uploadFile(file)
                 }
-                .disabled(!viewModel.isConnected)
+                .disabled(!viewModel.isConnected || viewModel.isGaming)
 
                 Divider()
 

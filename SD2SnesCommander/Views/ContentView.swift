@@ -20,25 +20,18 @@ struct ContentView: View {
         .navigationTitle(viewModel.deviceName)
         .toolbar {
             ToolbarItemGroup(placement: .navigation) {
-                Button(action: viewModel.toggleConnection) {
-                    Image(systemName: viewModel.isConnected ? "cable.connector" : "cable.connector.slash")
-                }
-                .help(viewModel.isConnected ? "Disconnect" : "Connect to QUsb2Snes")
-            }
-
-            ToolbarItemGroup(placement: .navigation) {
                 ControlGroup {
                     Button(action: viewModel.navigateBack) {
                         Label("Back", systemImage: "chevron.left")
                     }
                     .help("Go Back")
-                    .disabled(!viewModel.isConnected || !viewModel.canGoBack)
+                    .disabled(!viewModel.isConnected || viewModel.isGaming || !viewModel.canGoBack)
 
                     Button(action: viewModel.navigateForward) {
                         Label("Forward", systemImage: "chevron.right")
                     }
                     .help("Go Forward")
-                    .disabled(!viewModel.isConnected || !viewModel.canGoForward)
+                    .disabled(!viewModel.isConnected || viewModel.isGaming || !viewModel.canGoForward)
                 }
                 .controlGroupStyle(.navigation)
             }
@@ -52,6 +45,11 @@ struct ContentView: View {
                         .font(.caption)
                         .monospacedDigit()
                 }
+
+                Button(action: viewModel.toggleConnection) {
+                    Image(systemName: viewModel.isConnected ? "cable.connector" : "cable.connector.slash")
+                }
+                .help(viewModel.isConnected ? "Disconnect" : "Connect to QUsb2Snes")
 
                 if viewModel.isConnected {
                     Menu {

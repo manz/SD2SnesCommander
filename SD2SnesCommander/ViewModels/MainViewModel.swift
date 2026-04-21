@@ -30,9 +30,13 @@ class MainViewModel {
     var transferProgress: Double = 0.0
     var transferStatus = ""
 
+    var isGaming = false
+    var currentRomName: String?
+
     @ObservationIgnored let usbClient = SD2SnesUSBClient()
     @ObservationIgnored let fileManager = LocalFileManager()
     @ObservationIgnored var transferTask: Task<Void, Never>?
+    @ObservationIgnored var infoPollTask: Task<Void, Never>?
 
     init() {}
 

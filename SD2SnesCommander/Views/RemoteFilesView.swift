@@ -25,7 +25,30 @@ struct RemoteFilesView: View {
 
             Divider()
 
-            if viewModel.isConnected {
+            if viewModel.isConnected && viewModel.isGaming {
+                VStack(spacing: 16) {
+                    Image(systemName: "gamecontroller.fill")
+                        .font(.system(size: 48))
+                        .foregroundStyle(.secondary)
+
+                    Text(viewModel.currentRomName ?? "Game Running")
+                        .font(.title2)
+                        .fontWeight(.medium)
+                        .multilineTextAlignment(.center)
+                        .padding(.horizontal)
+
+                    Text("File operations are unavailable while a ROM is running. Return to the menu to browse files.")
+                        .foregroundStyle(.secondary)
+                        .multilineTextAlignment(.center)
+                        .padding(.horizontal)
+
+                    Button("Return to Menu") {
+                        viewModel.menuToDevice()
+                    }
+                    .buttonStyle(.borderedProminent)
+                }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+            } else if viewModel.isConnected {
                 List(Array(viewModel.remoteFiles.enumerated()), id: \.element.name) { index, file in
                     RemoteFileRow(file: file, viewModel: viewModel)
                         .contentShape(Rectangle())
