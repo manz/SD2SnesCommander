@@ -128,6 +128,19 @@ sd2snes_error_t clear_usb_pipe(IOUSBInterfaceInterface300 **interface_interface,
     return SD2SNES_SUCCESS;
 }
 
+// Reset pipe to a known-empty state after a failed transfer.
+// Clears any USB halt/stall, then drains stale data.
+static void recover_pipe(IOUSBInterfaceInterface300 **interface_interface, UInt8 pipeRef) {
+    if (!interface_interface || !*interface_interface) return;
+    kern_return_t result = (*interface_interface)->ClearPipeStall(interface_interface, pipeRef);
+    if (result != kIOReturnSuccess) {
+        printf("[SD2SNES] recover_pipe ClearPipeStall pipe %u: 0x%08x\n", pipeRef, result);
+    } else {
+        printf("[SD2SNES] recover_pipe pipe %u cleared\n", pipeRef);
+    }
+    clear_usb_pipe(interface_interface, pipeRef);
+}
+
 // File Operations
 
 sd2snes_error_t sd2snes_list_files(const char* path,
@@ -538,27 +551,25 @@ sd2snes_error_t sd2snes_menu_reset(void) {
     uint8_t response_buffer[USB_BLOCK_SIZE];
     uint32_t response_size;
 
-    // Send MENU_RESET command
     result = send_packet(SD2SNES_OP_MENU_RESET, SD2SNES_SPACE_SNES, SD2SNES_FLAG_NONE,
                         "", NULL, 0);
     if (result != SD2SNES_SUCCESS) {
         return result;
     }
 
-    // Receive response
+    // Best-effort read the response — firmware sends it before actually
+    // reloading the menu FPGA. Tolerate timeout since the reload may
+    // start before the packet drains.
     result = receive_response(response_buffer, &response_size);
     if (result != SD2SNES_SUCCESS) {
-        return result;
+        printf("[SD2SNES] menu_reset response missed (%d) — proceeding\n", result);
+        return SD2SNES_SUCCESS;
     }
 
-    // Check for error in response
     if (response_buffer[5] != 0) {
         return SD2SNES_ERROR_PROTOCOL_ERROR;
     }
-    
-    clear_usb_pipe(g_interface_interface, 2);
 
-    
     return SD2SNES_SUCCESS;
 }
 
@@ -901,6 +912,7 @@ static sd2snes_error_t receive_response(uint8_t* response_buffer, uint32_t* resp
 
         if (result != kIOReturnSuccess) {
             printf("[SD2SNES] receive_response ReadPipeTO failed: 0x%08x\n", result);
+            recover_pipe(g_interface_interface, 2);
             return SD2SNES_ERROR_TRANSFER_FAILED;
         }
         attempts++;
@@ -912,12 +924,14 @@ static sd2snes_error_t receive_response(uint8_t* response_buffer, uint32_t* resp
            response_buffer[4], response_buffer[5], response_buffer[6], response_buffer[7]);
 
     if (size < 8) {
+        recover_pipe(g_interface_interface, 2);
         return SD2SNES_ERROR_INVALID_RESPONSE;
     }
 
     // Check magic header
     if (response_buffer[0] != 'U' || response_buffer[1] != 'S' ||
         response_buffer[2] != 'B' || response_buffer[3] != 'A') {
+        recover_pipe(g_interface_interface, 2);
         return SD2SNES_ERROR_INVALID_RESPONSE;
     }
 
@@ -957,6 +971,7 @@ static sd2snes_error_t receive_bulk_data(uint8_t* buffer, uint32_t size, uint32_
             g_interface_interface, 2, buffer, &actual_size, 5000, 10000);
         if (result != kIOReturnSuccess) {
             printf("[SD2SNES] receive_bulk_data ReadPipeTO failed: 0x%08x\n", result);
+            recover_pipe(g_interface_interface, 2);
             return SD2SNES_ERROR_TRANSFER_FAILED;
         }
         attempts++;
