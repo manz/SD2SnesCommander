@@ -37,6 +37,8 @@ struct SD2SnesCLI {
             await handleReset()
         case "menu":
             await handleMenu()
+        case "restart-daemon":
+            handleRestartDaemon()
         case "help", "--help", "-h":
             printUsage()
         default:
@@ -63,6 +65,7 @@ struct SD2SnesCLI {
             boot <remote>              Boot a ROM already on the device
             reset                      Reset the running ROM
             menu                       Return to the menu
+            restart-daemon             Force-restart the bundled XPC USB daemon
             help                       Show this help message
 
         Examples:
@@ -318,6 +321,30 @@ struct SD2SnesCLI {
             try await client.reset()
             print("✓ Reset issued")
             await client.disconnect()
+        } catch {
+            print("✗ Failed: \(error.localizedDescription)")
+            exit(1)
+        }
+    }
+
+    static func handleRestartDaemon() {
+        // Tear down our own connection first so the proxy doesn't log a
+        // spurious invalidation, then SIGKILL the daemon. Launchd respawns
+        // it on the next XPC connection.
+        let task = Process()
+        task.launchPath = "/usr/bin/pkill"
+        task.arguments = ["-9", "-x", "SD2SnesUSBService"]
+        do {
+            try task.run()
+            task.waitUntilExit()
+            switch task.terminationStatus {
+            case 0:
+                print("✓ Daemon killed; launchd will restart it on next use")
+            case 1:
+                print("ℹ Daemon was not running; nothing to restart")
+            default:
+                print("⚠ pkill exited with status \(task.terminationStatus)")
+            }
         } catch {
             print("✗ Failed: \(error.localizedDescription)")
             exit(1)
