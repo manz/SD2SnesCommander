@@ -12,6 +12,7 @@ public actor SD2SnesUSBClient {
 
     private let logger = Logger(subsystem: "SD2snesCommanderCore", category: "USBClient")
     private var connection: NSXPCConnection?
+    private let progressForwarder = ProgressForwarder()
 
     private init() {}
 
@@ -21,6 +22,10 @@ public actor SD2SnesUSBClient {
         if let connection { return connection }
         let conn = NSXPCConnection(machServiceName: SD2SnesUSBServiceMachName)
         conn.remoteObjectInterface = NSXPCInterface(with: (any SD2SnesXPCProtocol).self)
+        // Configure the exported side once, before resume. The forwarder is
+        // a stable identity whose handler we swap in/out for each transfer.
+        conn.exportedInterface = NSXPCInterface(with: (any SD2SnesXPCProgressDelegate).self)
+        conn.exportedObject = progressForwarder
         conn.invalidationHandler = { [weak self] in
             Task { await self?.handleInvalidation() }
         }
@@ -200,14 +205,9 @@ public actor SD2SnesUSBClient {
         _ progressHandler: (@Sendable (Double) -> Void)?,
         _ body: (any SD2SnesXPCProtocol, @escaping (String?) -> Void) -> Void
     ) async throws {
-        let conn = ensureConnection()
-        if let progressHandler {
-            conn.exportedInterface = NSXPCInterface(with: (any SD2SnesXPCProgressDelegate).self)
-            conn.exportedObject = ProgressForwarder(handler: progressHandler)
-        }
-        defer {
-            conn.exportedObject = nil
-        }
+        _ = ensureConnection()
+        progressForwarder.setHandler(progressHandler)
+        defer { progressForwarder.setHandler(nil) }
         try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, any Error>) in
             body(proxyForCall(continuation: continuation)) { errorMessage in
                 if let errorMessage {
@@ -220,15 +220,24 @@ public actor SD2SnesUSBClient {
     }
 }
 
-// Bridges the Swift @Sendable closure to the @objc protocol the daemon
-// invokes. Held by NSXPCConnection.exportedObject for the duration of a
-// transfer.
-private final class ProgressForwarder: NSObject, SD2SnesXPCProgressDelegate {
-    let handler: @Sendable (Double) -> Void
-    init(handler: @escaping @Sendable (Double) -> Void) {
+// Bridges progress callbacks from the daemon to the current Swift
+// closure. Long-lived (one per SD2SnesUSBClient) so the connection's
+// exportedObject identity stays stable; setHandler swaps the active
+// handler around each transfer.
+private final class ProgressForwarder: NSObject, SD2SnesXPCProgressDelegate, @unchecked Sendable {
+    private let lock = NSLock()
+    private var handler: (@Sendable (Double) -> Void)?
+
+    func setHandler(_ handler: (@Sendable (Double) -> Void)?) {
+        lock.lock()
         self.handler = handler
+        lock.unlock()
     }
+
     @objc func transferProgress(_ fraction: Double) {
-        handler(fraction)
+        lock.lock()
+        let h = handler
+        lock.unlock()
+        h?(fraction)
     }
 }
