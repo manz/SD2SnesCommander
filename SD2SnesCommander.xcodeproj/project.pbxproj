@@ -15,6 +15,7 @@
 		B4D7611E2E82B9B0009E3B03 /* SD2snesCommanderCore.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = B4D761082E82B9B0009E3B03 /* SD2snesCommanderCore.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		B4D761382E82BC92009E3B03 /* IOKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B41DAB282E804D990020B624 /* IOKit.framework */; };
 		B4D761422E82BD02009E3B03 /* SD2snesCommanderCore/USB/sd2snes_usb.h in Headers */ = {isa = PBXBuildFile; fileRef = B4D761432E82BD02009E3B03 /* SD2snesCommanderCore/USB/sd2snes_usb.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		B4EC6DEC2F9CD3DE008860F9 /* sd2snes in CopyFiles */ = {isa = PBXBuildFile; fileRef = B435E9562E8307F5004FF67E /* sd2snes */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -53,6 +54,13 @@
 			remoteGlobalIDString = B4D761072E82B9B0009E3B03;
 			remoteInfo = SD2snesCommanderCore;
 		};
+		B4EC6DE92F9CD3A3008860F9 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = B41DAAE12E804C2D0020B624 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = B435E9552E8307F5004FF67E;
+			remoteInfo = sd2snes;
+		};
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -74,6 +82,16 @@
 				B4D7611E2E82B9B0009E3B03 /* SD2snesCommanderCore.framework in Embed Frameworks */,
 			);
 			name = "Embed Frameworks";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		B4EC6DEB2F9CD3BC008860F9 /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = Contents/Helpers;
+			dstSubfolderSpec = 1;
+			files = (
+				B4EC6DEC2F9CD3DE008860F9 /* sd2snes in CopyFiles */,
+			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXCopyFilesBuildPhase section */
@@ -257,10 +275,12 @@
 				B41DAAE62E804C2D0020B624 /* Frameworks */,
 				B41DAAE72E804C2D0020B624 /* Resources */,
 				B4D761222E82B9B0009E3B03 /* Embed Frameworks */,
+				B4EC6DEB2F9CD3BC008860F9 /* CopyFiles */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				B4EC6DEA2F9CD3A3008860F9 /* PBXTargetDependency */,
 				B4D7611C2E82B9B0009E3B03 /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
@@ -554,6 +574,11 @@
 			target = B4D761072E82B9B0009E3B03 /* SD2snesCommanderCore */;
 			targetProxy = B4D7611B2E82B9B0009E3B03 /* PBXContainerItemProxy */;
 		};
+		B4EC6DEA2F9CD3A3008860F9 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = B435E9552E8307F5004FF67E /* sd2snes */;
+			targetProxy = B4EC6DE92F9CD3A3008860F9 /* PBXContainerItemProxy */;
+		};
 /* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
@@ -705,7 +730,7 @@
 					"@executable_path/../Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = net.ringum.SD2SnesCommander;
+				PRODUCT_BUNDLE_IDENTIFIER = net.ringum.sd2snescommander;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				REGISTER_APP_GROUPS = YES;
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
@@ -747,7 +772,7 @@
 					"@executable_path/../Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = net.ringum.SD2SnesCommander;
+				PRODUCT_BUNDLE_IDENTIFIER = net.ringum.sd2snescommander;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				REGISTER_APP_GROUPS = YES;
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
@@ -768,7 +793,7 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				MACOSX_DEPLOYMENT_TARGET = 26.0;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = net.ringum.SD2SnesCommanderTests;
+				PRODUCT_BUNDLE_IDENTIFIER = net.ringum.sd2snescommander.tests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = NO;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
@@ -788,7 +813,7 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				MACOSX_DEPLOYMENT_TARGET = 26.0;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = net.ringum.SD2SnesCommanderTests;
+				PRODUCT_BUNDLE_IDENTIFIER = net.ringum.sd2snescommander.tests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = NO;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
@@ -806,7 +831,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				GENERATE_INFOPLIST_FILE = YES;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = net.ringum.SD2SnesCommanderUITests;
+				PRODUCT_BUNDLE_IDENTIFIER = net.ringum.sd2snescommander.uitests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = NO;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
@@ -824,7 +849,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				GENERATE_INFOPLIST_FILE = YES;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = net.ringum.SD2SnesCommanderUITests;
+				PRODUCT_BUNDLE_IDENTIFIER = net.ringum.sd2snescommander.uitests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = NO;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
@@ -838,10 +863,18 @@
 		B435E95A2E8307F5004FF67E /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CODE_SIGN_IDENTITY = "Apple Development";
+				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "-";
 				CODE_SIGN_STYLE = Automatic;
-				DEVELOPMENT_TEAM = FZAYF37SJF;
+				DEVELOPMENT_TEAM = "";
 				ENABLE_HARDENED_RUNTIME = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"@executable_path/../Frameworks",
+					"@executable_path",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = net.ringum.sd2snescommander.cli;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 5.0;
@@ -851,10 +884,18 @@
 		B435E95B2E8307F5004FF67E /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CODE_SIGN_IDENTITY = "Apple Development";
+				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "-";
 				CODE_SIGN_STYLE = Automatic;
-				DEVELOPMENT_TEAM = FZAYF37SJF;
+				DEVELOPMENT_TEAM = "";
 				ENABLE_HARDENED_RUNTIME = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"@executable_path/../Frameworks",
+					"@executable_path",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = net.ringum.sd2snescommander.cli;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 5.0;
@@ -886,7 +927,7 @@
 				MARKETING_VERSION = 1.0;
 				MODULE_VERIFIER_SUPPORTED_LANGUAGES = "objective-c objective-c++";
 				MODULE_VERIFIER_SUPPORTED_LANGUAGE_STANDARDS = "gnu17 gnu++20";
-				PRODUCT_BUNDLE_IDENTIFIER = net.ringum.SD2snesCommanderCore;
+				PRODUCT_BUNDLE_IDENTIFIER = net.ringum.sd2snescommander.core;
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
 				SKIP_INSTALL = YES;
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
@@ -926,7 +967,7 @@
 				MARKETING_VERSION = 1.0;
 				MODULE_VERIFIER_SUPPORTED_LANGUAGES = "objective-c objective-c++";
 				MODULE_VERIFIER_SUPPORTED_LANGUAGE_STANDARDS = "gnu17 gnu++20";
-				PRODUCT_BUNDLE_IDENTIFIER = net.ringum.SD2snesCommanderCore;
+				PRODUCT_BUNDLE_IDENTIFIER = net.ringum.sd2snescommander.core;
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
 				SKIP_INSTALL = YES;
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
@@ -946,10 +987,10 @@
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = FZAYF37SJF;
+				DEVELOPMENT_TEAM = "";
 				GENERATE_INFOPLIST_FILE = YES;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = net.ringum.SD2snesCommanderCoreTests;
+				PRODUCT_BUNDLE_IDENTIFIER = net.ringum.sd2snescommander.core.tests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = NO;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
@@ -965,10 +1006,10 @@
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = FZAYF37SJF;
+				DEVELOPMENT_TEAM = "";
 				GENERATE_INFOPLIST_FILE = YES;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = net.ringum.SD2snesCommanderCoreTests;
+				PRODUCT_BUNDLE_IDENTIFIER = net.ringum.sd2snescommander.core.tests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = NO;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
