@@ -61,39 +61,38 @@ class LocalFileManager {
     
     // MARK: - File Operations
     
-    func getFiles(at url: URL) -> [LocalFileItem] {
-        do {
-            let contents = try fileManager.contentsOfDirectory(at: url, 
-                                                             includingPropertiesForKeys: [.isDirectoryKey, .fileSizeKey],
-                                                             options: [.skipsHiddenFiles])
-            
-            return contents.compactMap { fileURL in
-                do {
-                    let resourceValues = try fileURL.resourceValues(forKeys: [.isDirectoryKey, .fileSizeKey])
-                    let isDirectory = resourceValues.isDirectory ?? false
-                    let size = resourceValues.fileSize.map(Int64.init) ?? 0
-                    
+    func getFiles(at url: URL) async -> [LocalFileItem] {
+        // Run the directory enumeration off the main actor so a large
+        // folder doesn't beachball the UI.
+        await Task.detached(priority: .userInitiated) {
+            let fm = Foundation.FileManager.default
+            do {
+                let contents = try fm.contentsOfDirectory(
+                    at: url,
+                    includingPropertiesForKeys: [.isDirectoryKey, .fileSizeKey],
+                    options: [.skipsHiddenFiles]
+                )
+                return contents.compactMap { fileURL -> LocalFileItem? in
+                    let resourceValues = try? fileURL.resourceValues(forKeys: [.isDirectoryKey, .fileSizeKey])
+                    let isDirectory = resourceValues?.isDirectory ?? false
+                    let size = resourceValues?.fileSize.map(Int64.init) ?? 0
                     return LocalFileItem(
                         name: fileURL.lastPathComponent,
                         path: fileURL.path,
                         size: size,
                         isDirectory: isDirectory
                     )
-                } catch {
-                    return nil
+                }.sorted { item1, item2 in
+                    if item1.isDirectory != item2.isDirectory {
+                        return item1.isDirectory
+                    }
+                    return item1.name.localizedCaseInsensitiveCompare(item2.name) == .orderedAscending
                 }
-            }.sorted { item1, item2 in
-                // Directories first, then alphabetically
-                if item1.isDirectory != item2.isDirectory {
-                    return item1.isDirectory
-                }
-                return item1.name.localizedCaseInsensitiveCompare(item2.name) == .orderedAscending
+            } catch {
+                print("Error reading directory contents: \(error)")
+                return []
             }
-            
-        } catch {
-            print("Error reading directory contents: \(error)")
-            return []
-        }
+        }.value
     }
     
     func fileExists(at path: String) -> Bool {

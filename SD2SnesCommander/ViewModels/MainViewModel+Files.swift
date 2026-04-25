@@ -10,18 +10,18 @@ extension MainViewModel {
         Task {
             guard let url = await fileManager.browseForDirectory() else { return }
             currentLocalPath = url.path
-            loadLocalFiles(at: url)
+            await loadLocalFiles(at: url)
         }
     }
 
     func loadInitialLocalFiles() {
         let documentsURL = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
         currentLocalPath = documentsURL.path
-        loadLocalFiles(at: documentsURL)
+        Task { await loadLocalFiles(at: documentsURL) }
     }
 
-    func loadLocalFiles(at url: URL) {
-        localFiles = fileManager.getFiles(at: url)
+    func loadLocalFiles(at url: URL) async {
+        localFiles = await fileManager.getFiles(at: url)
         clearLocalSelection()
     }
 
@@ -29,7 +29,7 @@ extension MainViewModel {
         guard file.isDirectory else { return }
         let url = URL(fileURLWithPath: file.path)
         currentLocalPath = url.path
-        loadLocalFiles(at: url)
+        Task { await loadLocalFiles(at: url) }
     }
 
     func showInFinder(_ file: LocalFileItem) {
