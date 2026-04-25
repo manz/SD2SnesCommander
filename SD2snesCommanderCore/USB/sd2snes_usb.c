@@ -568,26 +568,28 @@ sd2snes_error_t sd2snes_reset_device(void) {
     }
 
     sd2snes_error_t result;
+    uint8_t response_buffer[USB_BLOCK_SIZE];
+    uint32_t response_size;
 
-    // Send RESET command
     result = send_packet(SD2SNES_OP_RESET, SD2SNES_SPACE_SNES, SD2SNES_FLAG_NONE,
                         "", NULL, 0);
     if (result != SD2SNES_SUCCESS) {
         return result;
     }
-/*
-    // Receive response
+
+    // Firmware always emits a status response — read it, otherwise it sits
+    // queued and the next command picks up stale bytes. Tolerate a missed
+    // response (the SNES reset window can be tight) the same way menu_reset
+    // does.
     result = receive_response(response_buffer, &response_size);
     if (result != SD2SNES_SUCCESS) {
-        return result;
+        printf("[SD2SNES] reset response missed (%d) — proceeding\n", result);
+        return SD2SNES_SUCCESS;
     }
 
-    // Check for error in response
     if (response_buffer[5] != 0) {
         return SD2SNES_ERROR_PROTOCOL_ERROR;
     }
-*/
-    clear_usb_pipe(g_interface_interface, 2);
 
     return SD2SNES_SUCCESS;
 }
