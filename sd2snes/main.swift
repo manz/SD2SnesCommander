@@ -149,6 +149,23 @@ struct SD2SnesCLI {
             exit(1)
         }
 
+        // Mirror the GUI's auto-IPS behavior: if a sibling .ips patch exists
+        // alongside a ROM, apply it into a temp file and upload that.
+        var uploadFromPath = fileURL.path
+        var tempPatchedPath: String? = nil
+        if isBootableROM(fileURL), let ipsPath = IPSPatcher.findIPSPatch(for: fileURL.path) {
+            do {
+                tempPatchedPath = try IPSPatcher.createTemporaryPatchedFile(
+                    romPath: fileURL.path,
+                    ipsPath: ipsPath
+                )
+                uploadFromPath = tempPatchedPath!
+                print("✓ Applied IPS patch '\((ipsPath as NSString).lastPathComponent)'")
+            } catch {
+                print("⚠ IPS patch '\((ipsPath as NSString).lastPathComponent)' failed: \(error.localizedDescription) — uploading unpatched ROM")
+            }
+        }
+
         print("Connecting to SD2SNES device...")
 
         let client = SD2SnesUSBClient.shared
@@ -163,13 +180,17 @@ struct SD2SnesCLI {
 
             ProgressReporter.start()
             do {
-                try await client.uploadFile(localPath: fileURL.path, remotePath: remotePath) { fraction in
+                try await client.uploadFile(localPath: uploadFromPath, remotePath: remotePath) { fraction in
                     ProgressReporter.update(fraction)
                 }
                 ProgressReporter.finish(success: true)
             } catch {
                 ProgressReporter.finish(success: false)
                 throw error
+            }
+
+            if let tempPatchedPath {
+                try? FileManager.default.removeItem(atPath: tempPatchedPath)
             }
 
             print("✓ Successfully uploaded '\(fileURL.lastPathComponent)'")
@@ -181,6 +202,9 @@ struct SD2SnesCLI {
 
             await client.disconnect()
         } catch {
+            if let tempPatchedPath {
+                try? FileManager.default.removeItem(atPath: tempPatchedPath)
+            }
             print("✗ Failed: \(error.localizedDescription)")
             exit(1)
         }
