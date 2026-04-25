@@ -5,7 +5,7 @@ import SD2snesCommanderCore
 
 @MainActor
 @Observable
-class StatusBarManager {
+final class StatusBarManager {
     private var mainViewModel: MainViewModel {
         AppState.shared.mainViewModel
     }

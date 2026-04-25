@@ -6,7 +6,7 @@ import SD2snesCommanderCore
 
 @MainActor
 @Observable
-class MainViewModel {
+final class MainViewModel {
     var isConnected = false
     var connectionStatus = "Disconnected"
     var isConnecting = false

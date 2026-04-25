@@ -3,7 +3,7 @@ import Observation
 
 @MainActor
 @Observable
-class AppState {
+final class AppState {
     static let shared = AppState()
 
     let mainViewModel: MainViewModel
