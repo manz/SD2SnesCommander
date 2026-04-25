@@ -8,6 +8,23 @@ enum ProgressReporter {
     private static var lastPercent = -1
     private static var isActive = false
 
+    // Terminals that render OSC 9;4 in their taskbar/title — skip the
+    // textual bar so we don't litter the scrollback.
+    private static let supportsTaskbarProgress: Bool = {
+        let env = ProcessInfo.processInfo.environment
+        if env["KITTY_WINDOW_ID"] != nil { return true }
+        if env["WEZTERM_PANE"] != nil { return true }
+        if env["KONSOLE_VERSION"] != nil { return true }
+        switch env["TERM_PROGRAM"] {
+        case "ghostty", "WezTerm", "kitty":
+            return true
+        default:
+            break
+        }
+        if env["TERM"]?.contains("kitty") == true { return true }
+        return false
+    }()
+
     static func start() {
         lock.lock()
         defer { lock.unlock() }
@@ -23,7 +40,9 @@ enum ProgressReporter {
         guard isActive, percent != lastPercent else { return }
         lastPercent = percent
         emitOSC(state: 1, percent: percent)
-        emitTextBar(percent: percent)
+        if !supportsTaskbarProgress {
+            emitTextBar(percent: percent)
+        }
     }
 
     static func finish(success: Bool) {
@@ -32,7 +51,9 @@ enum ProgressReporter {
         guard isActive else { return }
         isActive = false
         if success {
-            emitTextBar(percent: 100, terminate: true)
+            if !supportsTaskbarProgress {
+                emitTextBar(percent: 100, terminate: true)
+            }
             emitOSC(state: 0, percent: 0)
         } else {
             emitOSC(state: 2, percent: max(0, lastPercent))
