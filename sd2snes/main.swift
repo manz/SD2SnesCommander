@@ -124,7 +124,6 @@ struct SD2SnesCLI {
 
         let destinationPath = normalizeRemotePath(args.count > 1 ? args[1] : "")
 
-        // Check if source file exists
         let fileURL = URL(fileURLWithPath: sourceFile)
         guard FileManager.default.fileExists(atPath: fileURL.path) else {
             print("✗ Source file '\(sourceFile)' does not exist")
@@ -139,13 +138,21 @@ struct SD2SnesCLI {
             try await client.connect()
             print("✓ Connected, uploading '\(fileURL.lastPathComponent)' to '\(destinationPath.isEmpty ? "/" : destinationPath)'")
 
-            // Construct remote path
             let remotePath = destinationPath.isEmpty
                 ? fileURL.lastPathComponent
                 : "\(destinationPath)/\(fileURL.lastPathComponent)"
 
-            // Upload the file
-            try await client.uploadFile(localPath: fileURL.path, remotePath: remotePath)
+            ProgressReporter.start()
+            do {
+                try await client.uploadFile(localPath: fileURL.path, remotePath: remotePath) { fraction in
+                    ProgressReporter.update(fraction)
+                }
+                ProgressReporter.finish(success: true)
+            } catch {
+                ProgressReporter.finish(success: false)
+                throw error
+            }
+
             print("✓ Successfully uploaded '\(fileURL.lastPathComponent)'")
 
             await client.disconnect()
