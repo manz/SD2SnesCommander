@@ -82,7 +82,8 @@ struct SD2SnesCLI {
     }
 
     static func handleLS(args: [String]) async {
-        let path = args.first ?? ""
+        let rawPath = args.first ?? ""
+        let path = normalizeRemotePath(rawPath)
 
         print("Connecting to SD2SNES device...")
 
@@ -121,7 +122,7 @@ struct SD2SnesCLI {
             exit(1)
         }
 
-        let destinationPath = args.count > 1 ? args[1] : ""
+        let destinationPath = normalizeRemotePath(args.count > 1 ? args[1] : "")
 
         // Check if source file exists
         let fileURL = URL(fileURLWithPath: sourceFile)
@@ -139,9 +140,9 @@ struct SD2SnesCLI {
             print("✓ Connected, uploading '\(fileURL.lastPathComponent)' to '\(destinationPath.isEmpty ? "/" : destinationPath)'")
 
             // Construct remote path
-            let remotePath = destinationPath.isEmpty ? fileURL.lastPathComponent :
-                            destinationPath.hasSuffix("/") ? destinationPath + fileURL.lastPathComponent :
-                            destinationPath + "/" + fileURL.lastPathComponent
+            let remotePath = destinationPath.isEmpty
+                ? fileURL.lastPathComponent
+                : "\(destinationPath)/\(fileURL.lastPathComponent)"
 
             // Upload the file
             try await client.uploadFile(localPath: fileURL.path, remotePath: remotePath)
@@ -152,6 +153,15 @@ struct SD2SnesCLI {
             print("✗ Failed to upload file: \(error.localizedDescription)")
             exit(1)
         }
+    }
+
+    // Firmware paths are relative to the SD root and never start with '/'.
+    // Accept "/", "/Hacks", "Hacks", "Hacks/" all the same way.
+    static func normalizeRemotePath(_ path: String) -> String {
+        var trimmed = path
+        while trimmed.hasPrefix("/") { trimmed.removeFirst() }
+        while trimmed.hasSuffix("/") { trimmed.removeLast() }
+        return trimmed
     }
 
     static func formatFileSize(_ bytes: Int64) -> String {
