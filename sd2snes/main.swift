@@ -43,10 +43,12 @@ struct SD2SnesCLI {
             sd2snes <command> [options]
 
         Commands:
-            info                Show device information
-            ls [path]          List files on device (default: root directory)
-            cp <file> [path]   Upload file to device (default: root directory)
-            help               Show this help message
+            info                       Show device information
+            ls [path]                  List files on device (default: root directory)
+            cp [-b|--boot] <file> [path]
+                                       Upload file to device (default: root directory).
+                                       -b/--boot: boot the ROM after upload.
+            help                       Show this help message
 
         Examples:
             sd2snes info
@@ -54,6 +56,7 @@ struct SD2SnesCLI {
             sd2snes ls /games
             sd2snes cp game.sfc
             sd2snes cp game.sfc /games
+            sd2snes cp -b game.sfc /games
         """)
     }
 
@@ -116,17 +119,33 @@ struct SD2SnesCLI {
     }
 
     static func handleCP(args: [String]) async {
-        guard let sourceFile = args.first else {
+        var bootAfter = false
+        var positional: [String] = []
+        for arg in args {
+            switch arg {
+            case "-b", "--boot":
+                bootAfter = true
+            default:
+                positional.append(arg)
+            }
+        }
+
+        guard let sourceFile = positional.first else {
             print("Error: No source file specified")
-            print("Usage: sd2snes cp <file> [destination_path]")
+            print("Usage: sd2snes cp [-b|--boot] <file> [destination_path]")
             exit(1)
         }
 
-        let destinationPath = normalizeRemotePath(args.count > 1 ? args[1] : "")
+        let destinationPath = normalizeRemotePath(positional.count > 1 ? positional[1] : "")
 
         let fileURL = URL(fileURLWithPath: sourceFile)
         guard FileManager.default.fileExists(atPath: fileURL.path) else {
             print("✗ Source file '\(sourceFile)' does not exist")
+            exit(1)
+        }
+
+        if bootAfter && !isBootableROM(fileURL) {
+            print("✗ -b/--boot only works on ROM files (.smc/.sfc/.fig/.swc/.bs/.gb)")
             exit(1)
         }
 
@@ -155,11 +174,21 @@ struct SD2SnesCLI {
 
             print("✓ Successfully uploaded '\(fileURL.lastPathComponent)'")
 
+            if bootAfter {
+                try await client.bootRom(path: remotePath)
+                print("✓ Booting '\(remotePath)'")
+            }
+
             await client.disconnect()
         } catch {
-            print("✗ Failed to upload file: \(error.localizedDescription)")
+            print("✗ Failed: \(error.localizedDescription)")
             exit(1)
         }
+    }
+
+    static func isBootableROM(_ url: URL) -> Bool {
+        let ext = url.pathExtension.lowercased()
+        return ["smc", "sfc", "fig", "swc", "bs", "gb"].contains(ext)
     }
 
     // Firmware paths are relative to the SD root and never start with '/'.
