@@ -150,11 +150,19 @@ sd2snes_error_t clear_usb_pipe(IOUSBInterfaceInterface300 **interface_interface,
 
 // Reset pipe to a known-empty state after a failed transfer.
 // Clears any USB halt/stall, then drains stale data.
+// If the device looks gone, mark us disconnected so callers stop pretending.
 static void recover_pipe(IOUSBInterfaceInterface300 **interface_interface, UInt8 pipeRef) {
     if (!interface_interface || !*interface_interface) return;
     kern_return_t result = (*interface_interface)->ClearPipeStall(interface_interface, pipeRef);
     if (result != kIOReturnSuccess) {
         printf("[SD2SNES] recover_pipe ClearPipeStall pipe %u: 0x%08x\n", pipeRef, result);
+        if (result == kIOReturnNoDevice ||
+            result == kIOReturnNotResponding ||
+            result == kIOReturnNotAttached ||
+            result == kIOReturnAborted) {
+            atomic_store(&g_is_connected, false);
+            return;
+        }
     } else {
         printf("[SD2SNES] recover_pipe pipe %u cleared\n", pipeRef);
     }
@@ -201,9 +209,13 @@ sd2snes_error_t sd2snes_list_files(const char* path,
     uint8_t partial_type = 0;
     int has_partial = 0;
 
-    // Stream entry blocks until 0xFF terminator
+    // Stream entry blocks until 0xFF terminator. Always drain to the
+    // terminator so the next command sees a clean pipe; if the caller's
+    // buffer fills mid-stream, keep parsing but stop writing entries and
+    // surface BUFFER_OVERFLOW once done.
     int done = 0;
-    while (!done && *file_count < max_files) {
+    int overflow = 0;
+    while (!done) {
         uint8_t block[USB_BLOCK_SIZE];
         uint32_t bytes_received = 0;
         result = receive_bulk_data(block, USB_BLOCK_SIZE, &bytes_received);
@@ -212,7 +224,7 @@ sd2snes_error_t sd2snes_list_files(const char* path,
         }
 
         uint32_t offset = 0;
-        while (offset < bytes_received && *file_count < max_files) {
+        while (offset < bytes_received) {
             uint8_t type = block[offset];
             if (type == 0xFF) { done = 1; break; }
 
@@ -235,7 +247,7 @@ sd2snes_error_t sd2snes_list_files(const char* path,
                 if (name_complete) {
                     // Continuation ended this block — finalize
                     partial_name[partial_len] = '\0';
-                    if (has_partial) {
+                    if (has_partial && *file_count < max_files) {
                         size_t copy_len = partial_len;
                         if (copy_len >= sizeof(files[*file_count].name)) {
                             copy_len = sizeof(files[*file_count].name) - 1;
@@ -245,6 +257,8 @@ sd2snes_error_t sd2snes_list_files(const char* path,
                         files[*file_count].size = 0;
                         files[*file_count].is_directory = (partial_type == 0);
                         (*file_count)++;
+                    } else if (has_partial) {
+                        overflow = 1;
                     }
                     partial_len = 0;
                     has_partial = 0;
@@ -269,23 +283,28 @@ sd2snes_error_t sd2snes_list_files(const char* path,
             }
 
             if (name_length > 0) {
-                size_t copy_len = name_length;
-                if (copy_len >= sizeof(files[*file_count].name)) {
-                    copy_len = sizeof(files[*file_count].name) - 1;
+                if (*file_count < max_files) {
+                    size_t copy_len = name_length;
+                    if (copy_len >= sizeof(files[*file_count].name)) {
+                        copy_len = sizeof(files[*file_count].name) - 1;
+                    }
+                    memcpy(files[*file_count].name, &block[offset], copy_len);
+                    files[*file_count].name[copy_len] = '\0';
+                    files[*file_count].size = 0;
+                    files[*file_count].is_directory = (type == 0);
+                    (*file_count)++;
+                } else {
+                    overflow = 1;
                 }
-                memcpy(files[*file_count].name, &block[offset], copy_len);
-                files[*file_count].name[copy_len] = '\0';
-                files[*file_count].size = 0;
-                files[*file_count].is_directory = (type == 0);
-                (*file_count)++;
             }
 
             offset = name_end + 1;
         }
     }
 
-    printf("[SD2SNES] ✅ C level complete: parsed %zu files total\n", *file_count);
-    return SD2SNES_SUCCESS;
+    printf("[SD2SNES] C level complete: parsed %zu files total%s\n",
+           *file_count, overflow ? " (buffer overflow)" : "");
+    return overflow ? SD2SNES_ERROR_BUFFER_OVERFLOW : SD2SNES_SUCCESS;
 }
 
 sd2snes_error_t sd2snes_upload_file(const char* local_path,
@@ -671,6 +690,8 @@ const char* sd2snes_error_string(sd2snes_error_t error) {
             return "File error";
         case SD2SNES_ERROR_INVALID_PARAMETER:
             return "Invalid parameter";
+        case SD2SNES_ERROR_BUFFER_OVERFLOW:
+            return "Result buffer too small";
         default:
             return "Unknown error";
     }

@@ -8,6 +8,7 @@ public enum SD2SnesUSBError: Error, LocalizedError {
     case protocolError(String)
     case fileError(String)
     case invalidParameter(String)
+    case bufferOverflow
 
     public var errorDescription: String? {
         switch self {
@@ -25,6 +26,8 @@ public enum SD2SnesUSBError: Error, LocalizedError {
             return "File error: \(message)"
         case .invalidParameter(let message):
             return "Invalid parameter: \(message)"
+        case .bufferOverflow:
+            return "Result buffer too small"
         }
     }
 
@@ -44,6 +47,8 @@ public enum SD2SnesUSBError: Error, LocalizedError {
             self = .fileError(String(cString: sd2snes_error_string(cError)))
         case SD2SNES_ERROR_INVALID_PARAMETER:
             self = .invalidParameter(String(cString: sd2snes_error_string(cError)))
+        case SD2SNES_ERROR_BUFFER_OVERFLOW:
+            self = .bufferOverflow
         default:
             self = .connectionFailed("Unknown error: \(cError)")
         }
