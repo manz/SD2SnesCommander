@@ -62,7 +62,7 @@ public actor SD2SnesUSBClient {
         try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, any Error>) in
             proxyForCall(continuation: continuation).connect { errorMessage in
                 if let errorMessage {
-                    continuation.resume(throwing: SD2SnesUSBError.connectionFailed(errorMessage))
+                    continuation.resume(throwing: SD2SnesUSBError.remote(errorMessage))
                 } else {
                     continuation.resume()
                 }
@@ -102,7 +102,7 @@ public actor SD2SnesUSBClient {
         try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<RemoteInfo, any Error>) in
             proxyForCall(continuation: continuation).info { data, errorMessage in
                 if let errorMessage {
-                    continuation.resume(throwing: SD2SnesUSBError.protocolError(errorMessage))
+                    continuation.resume(throwing: SD2SnesUSBError.remote(errorMessage))
                     return
                 }
                 guard let data,
@@ -121,7 +121,7 @@ public actor SD2SnesUSBClient {
         try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<[RemoteFileItem], any Error>) in
             proxyForCall(continuation: continuation).listFiles(path: path) { data, errorMessage in
                 if let errorMessage {
-                    continuation.resume(throwing: SD2SnesUSBError.protocolError(errorMessage))
+                    continuation.resume(throwing: SD2SnesUSBError.remote(errorMessage))
                     return
                 }
                 guard let data,
@@ -188,7 +188,7 @@ public actor SD2SnesUSBClient {
         try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, any Error>) in
             body(proxyForCall(continuation: continuation)) { errorMessage in
                 if let errorMessage {
-                    continuation.resume(throwing: SD2SnesUSBError.protocolError(errorMessage))
+                    continuation.resume(throwing: SD2SnesUSBError.remote(errorMessage))
                 } else {
                     continuation.resume()
                 }
@@ -211,7 +211,7 @@ public actor SD2SnesUSBClient {
         try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, any Error>) in
             body(proxyForCall(continuation: continuation)) { errorMessage in
                 if let errorMessage {
-                    continuation.resume(throwing: SD2SnesUSBError.transferFailed(errorMessage))
+                    continuation.resume(throwing: SD2SnesUSBError.remote(errorMessage))
                 } else {
                     continuation.resume()
                 }
