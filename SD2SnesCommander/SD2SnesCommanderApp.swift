@@ -15,6 +15,10 @@ struct SD2SnesCommanderApp: App {
             CommandGroup(replacing: .appInfo) {
                 Button("About SD2Snes Commander") {
                 }
+                Divider()
+                Button("Install Command Line Tool…") {
+                    CommandLineToolInstaller.install()
+                }
             }
 
             CommandGroup(after: .newItem) {
@@ -27,6 +31,13 @@ struct SD2SnesCommanderApp: App {
                 Button("Refresh Local Files") {
                 }
                 .keyboardShortcut("r", modifiers: .command)
+
+                Divider()
+
+                Button("Restart USB Service") {
+                    USBServiceController.restart()
+                }
+                .keyboardShortcut("u", modifiers: [.command, .option, .shift])
             }
         }
     }
