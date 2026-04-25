@@ -17,8 +17,11 @@ enum CommandLineToolInstaller {
         guard FileManager.default.isExecutableFile(atPath: source) else {
             showAlert(
                 style: .warning,
-                title: "CLI Not Found",
-                message: "Could not locate the sd2snes binary inside the app bundle at \(source)."
+                title: String(localized: "CLI Not Found"),
+                message: String(
+                    format: String(localized: "Could not locate the sd2snes binary inside the app bundle at %@."),
+                    source
+                )
             )
             return
         }
@@ -34,14 +37,17 @@ enum CommandLineToolInstaller {
 
         if let error {
             let message = error["NSAppleScriptErrorMessage"] as? String ?? "\(error)"
-            showAlert(style: .warning, title: "Install Failed", message: message)
+            showAlert(style: .warning, title: String(localized: "Install Failed"), message: message)
             return
         }
 
         showAlert(
             style: .informational,
-            title: "Installed",
-            message: "sd2snes is now available at \(installPath)."
+            title: String(localized: "Installed"),
+            message: String(
+                format: String(localized: "sd2snes is now available at %@."),
+                installPath
+            )
         )
     }
 
@@ -50,7 +56,7 @@ enum CommandLineToolInstaller {
         alert.alertStyle = style
         alert.messageText = title
         alert.informativeText = message
-        alert.addButton(withTitle: "OK")
+        alert.addButton(withTitle: String(localized: "OK"))
         alert.runModal()
     }
 }
@@ -73,9 +79,9 @@ enum USBServiceController {
         } catch {
             let alert = NSAlert()
             alert.alertStyle = .warning
-            alert.messageText = "Restart Failed"
+            alert.messageText = String(localized: "Restart Failed")
             alert.informativeText = error.localizedDescription
-            alert.addButton(withTitle: "OK")
+            alert.addButton(withTitle: String(localized: "OK"))
             alert.runModal()
         }
     }

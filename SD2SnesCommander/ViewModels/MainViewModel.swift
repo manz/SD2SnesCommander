@@ -8,9 +8,9 @@ import SD2snesCommanderCore
 @Observable
 final class MainViewModel {
     var isConnected = false
-    var connectionStatus = "Disconnected"
+    var connectionStatus = String(localized: "Disconnected")
     var isConnecting = false
-    var deviceName: String = "SD2Snes Commander"
+    var deviceName: String = String(localized: "SD2Snes Commander")
 
     var localFiles: [LocalFileItem] = []
     var remoteFiles: [RemoteFileItem] = []

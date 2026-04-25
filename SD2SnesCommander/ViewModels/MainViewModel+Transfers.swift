@@ -33,19 +33,19 @@ extension MainViewModel {
             transferProgress = 0.0
 
             if file.isRomFile, let ipsPath = IPSPatcher.findIPSPatch(for: file.path) {
-                transferStatus = "Applying IPS patch..."
+                transferStatus = String(localized: "Applying IPS patch…")
                 do {
                     tempFilePath = try IPSPatcher.createTemporaryPatchedFile(
                         romPath: file.path,
                         ipsPath: ipsPath
                     )
                     actualFilePath = tempFilePath!
-                    transferStatus = "Uploading patched \(file.name)..."
+                    transferStatus = String(format: String(localized: "Uploading patched %@…"), file.name)
                 } catch {
-                    transferStatus = "IPS patch failed: \(error.localizedDescription). Uploading \(file.name)..."
+                    transferStatus = String(format: String(localized: "IPS patch failed: %@. Uploading %@…"), error.localizedDescription, file.name)
                 }
             } else {
-                transferStatus = "Uploading \(file.name)..."
+                transferStatus = String(format: String(localized: "Uploading %@…"), file.name)
             }
 
             let fullRemotePath = currentRemotePath.isEmpty
@@ -63,7 +63,7 @@ extension MainViewModel {
                 bridge.finish()
                 _ = await bridge.drain.value
 
-                transferStatus = "Upload completed"
+                transferStatus = String(localized: "Upload completed")
                 transferProgress = 1.0
                 await refreshRemoteFiles()
 
@@ -79,7 +79,7 @@ extension MainViewModel {
                 if let tempPath = tempFilePath {
                     try? FileManager.default.removeItem(atPath: tempPath)
                 }
-                transferStatus = "Upload failed: \(error.localizedDescription)"
+                transferStatus = String(format: String(localized: "Upload failed: %@"), error.localizedDescription)
                 isTransferInProgress = false
             }
         }
@@ -94,7 +94,7 @@ extension MainViewModel {
 
             isTransferInProgress = true
             transferProgress = 0.0
-            transferStatus = "Downloading \(file.name)..."
+            transferStatus = String(format: String(localized: "Downloading %@…"), file.name)
 
             let fullRemotePath = currentRemotePath.isEmpty
                 ? file.name
@@ -111,7 +111,7 @@ extension MainViewModel {
                 bridge.finish()
                 _ = await bridge.drain.value
 
-                transferStatus = "Download completed"
+                transferStatus = String(localized: "Download completed")
                 transferProgress = 1.0
 
                 try? await Task.sleep(nanoseconds: 2_000_000_000)
@@ -119,7 +119,7 @@ extension MainViewModel {
                 transferStatus = ""
             } catch {
                 bridge.finish()
-                transferStatus = "Download failed: \(error.localizedDescription)"
+                transferStatus = String(format: String(localized: "Download failed: %@"), error.localizedDescription)
                 isTransferInProgress = false
             }
         }
@@ -129,11 +129,14 @@ extension MainViewModel {
         guard isConnected else { return }
 
         let alert = NSAlert()
-        alert.messageText = "Delete File"
-        alert.informativeText = "Are you sure you want to delete \"\(file.name)\"? This action cannot be undone."
+        alert.messageText = String(localized: "Delete File")
+        alert.informativeText = String(
+            format: String(localized: "Are you sure you want to delete \"%@\"? This action cannot be undone."),
+            file.name
+        )
         alert.alertStyle = .warning
-        alert.addButton(withTitle: "Delete")
-        alert.addButton(withTitle: "Cancel")
+        alert.addButton(withTitle: String(localized: "Delete"))
+        alert.addButton(withTitle: String(localized: "Cancel"))
 
         if alert.runModal() == .alertFirstButtonReturn {
             Task {

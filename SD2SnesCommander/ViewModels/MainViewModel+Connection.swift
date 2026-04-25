@@ -8,7 +8,7 @@ extension MainViewModel {
 
         Task {
             isConnecting = true
-            connectionStatus = "Searching for SD2SNES device..."
+            connectionStatus = String(localized: "Searching for SD2SNES device…")
 
             do {
                 try await usbClient.connect()
@@ -16,7 +16,7 @@ extension MainViewModel {
                 let info = try await usbClient.info()
 
                 deviceName = info.deviceName ?? "SD2SNES USB"
-                connectionStatus = "Connected to \(deviceName) via USB"
+                connectionStatus = String(format: String(localized: "Connected to %@ via USB"), deviceName)
                 isConnected = true
                 isGaming = Self.isGamingFromRomName(info.romName)
                 currentRomName = Self.displayRomName(info.romName, gaming: isGaming)
@@ -24,14 +24,17 @@ extension MainViewModel {
                 startInfoPolling()
                 await refreshRemoteFiles()
             } catch {
-                connectionStatus = "Failed to connect"
+                connectionStatus = String(localized: "Failed to connect")
                 isConnected = false
 
                 let alert = NSAlert()
-                alert.messageText = "USB Connection Failed"
-                alert.informativeText = "Could not find or connect to SD2SNES device via USB. Make sure the device is connected and powered on.\n\nError: \(error.localizedDescription)"
+                alert.messageText = String(localized: "USB Connection Failed")
+                alert.informativeText = String(
+                    format: String(localized: "Could not find or connect to SD2SNES device via USB. Make sure the device is connected and powered on.\n\nError: %@"),
+                    error.localizedDescription
+                )
                 alert.alertStyle = .warning
-                alert.addButton(withTitle: "OK")
+                alert.addButton(withTitle: String(localized: "OK"))
                 alert.runModal()
             }
 
@@ -50,8 +53,8 @@ extension MainViewModel {
             isGaming = false
             awaitingMenu = false
             currentRomName = nil
-            connectionStatus = "Disconnected"
-            deviceName = "SD2Snes Commander"
+            connectionStatus = String(localized: "Disconnected")
+            deviceName = String(localized: "SD2Snes Commander")
             remoteFiles = []
             clearRemoteSelection()
         }
@@ -179,7 +182,7 @@ extension MainViewModel {
                 isGaming = false
                 awaitingMenu = false
                 currentRomName = nil
-                connectionStatus = "Disconnected"
+                connectionStatus = String(localized: "Disconnected")
                 remoteFiles = []
                 clearRemoteSelection()
                 infoPollTask?.cancel()

@@ -36,37 +36,37 @@ class AppKitStatusBar {
         menu.removeAllItems()
 
         let statusItem = NSMenuItem()
-        statusItem.title = statusBarManager.isConnected ?
-            "✅ Connected to \(statusBarManager.deviceName)" :
-            "❌ Disconnected"
+        statusItem.title = statusBarManager.isConnected
+            ? String(format: String(localized: "✅ Connected to %@"), statusBarManager.deviceName)
+            : String(localized: "❌ Disconnected")
         statusItem.isEnabled = false
         menu.addItem(statusItem)
 
         menu.addItem(NSMenuItem.separator())
 
         if statusBarManager.isConnected {
-            let disconnectItem = NSMenuItem(title: "Disconnect", action: #selector(disconnectAction), keyEquivalent: "")
+            let disconnectItem = NSMenuItem(title: String(localized: "Disconnect"), action: #selector(disconnectAction), keyEquivalent: "")
             disconnectItem.target = self
             menu.addItem(disconnectItem)
 
-            let resetItem = NSMenuItem(title: "Reset Device", action: #selector(resetAction), keyEquivalent: "")
+            let resetItem = NSMenuItem(title: String(localized: "Reset Device"), action: #selector(resetAction), keyEquivalent: "")
             resetItem.target = self
             menu.addItem(resetItem)
         } else {
-            let connectItem = NSMenuItem(title: "Connect to Device", action: #selector(connectAction), keyEquivalent: "")
+            let connectItem = NSMenuItem(title: String(localized: "Connect to Device"), action: #selector(connectAction), keyEquivalent: "")
             connectItem.target = self
             menu.addItem(connectItem)
         }
 
         menu.addItem(NSMenuItem.separator())
 
-        let showWindowItem = NSMenuItem(title: "Show Main Window", action: #selector(showMainWindowAction), keyEquivalent: "")
+        let showWindowItem = NSMenuItem(title: String(localized: "Show Main Window"), action: #selector(showMainWindowAction), keyEquivalent: "")
         showWindowItem.target = self
         menu.addItem(showWindowItem)
 
         menu.addItem(NSMenuItem.separator())
 
-        let quitItem = NSMenuItem(title: "Quit SD2Snes Commander", action: #selector(quitAction), keyEquivalent: "q")
+        let quitItem = NSMenuItem(title: String(localized: "Quit SD2Snes Commander"), action: #selector(quitAction), keyEquivalent: "q")
         quitItem.target = self
         menu.addItem(quitItem)
     }
