@@ -568,8 +568,6 @@ sd2snes_error_t sd2snes_reset_device(void) {
     }
 
     sd2snes_error_t result;
-    uint8_t response_buffer[USB_BLOCK_SIZE];
-    uint32_t response_size;
 
     // Send RESET command
     result = send_packet(SD2SNES_OP_RESET, SD2SNES_SPACE_SNES, SD2SNES_FLAG_NONE,
