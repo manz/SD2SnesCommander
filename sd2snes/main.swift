@@ -19,13 +19,24 @@ struct SD2SnesCLI {
 
         let command = args[1]
 
+        let rest = Array(args.dropFirst(2))
         switch command {
         case "info":
             await handleInfo()
         case "ls":
-            await handleLS(args: Array(args.dropFirst(2)))
+            await handleLS(args: rest)
         case "cp":
-            await handleCP(args: Array(args.dropFirst(2)))
+            await handleCP(args: rest)
+        case "get":
+            await handleGet(args: rest)
+        case "rm":
+            await handleRM(args: rest)
+        case "boot":
+            await handleBoot(args: rest)
+        case "reset":
+            await handleReset()
+        case "menu":
+            await handleMenu()
         case "help", "--help", "-h":
             printUsage()
         default:
@@ -44,19 +55,26 @@ struct SD2SnesCLI {
 
         Commands:
             info                       Show device information
-            ls [path]                  List files on device (default: root directory)
+            ls [path]                  List files on device (default: root)
             cp [-b|--boot] <file> [path]
-                                       Upload file to device (default: root directory).
-                                       -b/--boot: boot the ROM after upload.
+                                       Upload file. -b/--boot: boot ROM after upload.
+            get <remote> [local]       Download a file from the device
+            rm <remote>                Delete a file from the device
+            boot <remote>              Boot a ROM already on the device
+            reset                      Reset the running ROM
+            menu                       Return to the menu
             help                       Show this help message
 
         Examples:
             sd2snes info
             sd2snes ls
             sd2snes ls /games
-            sd2snes cp game.sfc
-            sd2snes cp game.sfc /games
             sd2snes cp -b game.sfc /games
+            sd2snes get /games/save.srm save.srm
+            sd2snes rm /games/old.sfc
+            sd2snes boot /games/game.sfc
+            sd2snes reset
+            sd2snes menu
         """)
     }
 
@@ -213,6 +231,111 @@ struct SD2SnesCLI {
     static func isBootableROM(_ url: URL) -> Bool {
         let ext = url.pathExtension.lowercased()
         return ["smc", "sfc", "fig", "swc", "bs", "gb"].contains(ext)
+    }
+
+    static func handleGet(args: [String]) async {
+        guard let remoteArg = args.first else {
+            print("Usage: sd2snes get <remote> [local]")
+            exit(1)
+        }
+        let remotePath = normalizeRemotePath(remoteArg)
+        let remoteName = (remotePath as NSString).lastPathComponent
+        let localPath = args.count > 1
+            ? URL(fileURLWithPath: args[1]).path
+            : URL(fileURLWithPath: FileManager.default.currentDirectoryPath)
+                .appendingPathComponent(remoteName).path
+
+        print("Connecting to SD2SNES device...")
+        let client = SD2SnesUSBClient.shared
+        do {
+            try await client.connect()
+            print("✓ Connected, downloading '\(remotePath)' to '\(localPath)'")
+
+            ProgressReporter.start()
+            do {
+                try await client.downloadFile(remotePath: remotePath, localPath: localPath) { fraction in
+                    ProgressReporter.update(fraction)
+                }
+                ProgressReporter.finish(success: true)
+            } catch {
+                ProgressReporter.finish(success: false)
+                throw error
+            }
+
+            print("✓ Saved to '\(localPath)'")
+            await client.disconnect()
+        } catch {
+            print("✗ Failed: \(error.localizedDescription)")
+            exit(1)
+        }
+    }
+
+    static func handleRM(args: [String]) async {
+        guard let remoteArg = args.first else {
+            print("Usage: sd2snes rm <remote>")
+            exit(1)
+        }
+        let remotePath = normalizeRemotePath(remoteArg)
+
+        print("Connecting to SD2SNES device...")
+        let client = SD2SnesUSBClient.shared
+        do {
+            try await client.connect()
+            try await client.deleteFile(path: remotePath)
+            print("✓ Deleted '\(remotePath)'")
+            await client.disconnect()
+        } catch {
+            print("✗ Failed: \(error.localizedDescription)")
+            exit(1)
+        }
+    }
+
+    static func handleBoot(args: [String]) async {
+        guard let remoteArg = args.first else {
+            print("Usage: sd2snes boot <remote>")
+            exit(1)
+        }
+        let remotePath = normalizeRemotePath(remoteArg)
+
+        print("Connecting to SD2SNES device...")
+        let client = SD2SnesUSBClient.shared
+        do {
+            try await client.connect()
+            try await client.bootRom(path: remotePath)
+            print("✓ Booting '\(remotePath)'")
+            await client.disconnect()
+        } catch {
+            print("✗ Failed: \(error.localizedDescription)")
+            exit(1)
+        }
+    }
+
+    static func handleReset() async {
+        print("Connecting to SD2SNES device...")
+        let client = SD2SnesUSBClient.shared
+        do {
+            try await client.connect()
+            try await client.reset()
+            print("✓ Reset issued")
+            await client.disconnect()
+        } catch {
+            print("✗ Failed: \(error.localizedDescription)")
+            exit(1)
+        }
+    }
+
+    static func handleMenu() async {
+        print("Connecting to SD2SNES device...")
+        let client = SD2SnesUSBClient.shared
+        do {
+            try await client.connect()
+            try await client.menu()
+            print("✓ Returning to menu")
+            await client.disconnect()
+        } catch {
+            print("✗ Failed: \(error.localizedDescription)")
+            exit(1)
+        }
     }
 
     // Firmware paths are relative to the SD root and never start with '/'.
