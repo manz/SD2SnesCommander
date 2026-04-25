@@ -48,6 +48,7 @@ extension MainViewModel {
             await usbClient.disconnect()
             isConnected = false
             isGaming = false
+            awaitingMenu = false
             currentRomName = nil
             connectionStatus = "Disconnected"
             deviceName = "SD2Snes Commander"
@@ -99,11 +100,14 @@ extension MainViewModel {
         Task {
             do {
                 try await usbClient.menu()
-                // Flip UI out of the gaming placeholder. Poll resumes
-                // (was gated on isGaming) and will refresh the file list
-                // once firmware finishes reloading the menu and INFO
-                // reports the menu path again.
+                // Optimistically flip the UI out of the gaming placeholder
+                // and arm awaitingMenu. The FPGA reload window can leave
+                // INFO reporting the old rom path for a poll cycle or two —
+                // awaitingMenu makes pollInfo ignore that until the menu
+                // binary path actually shows up.
+                awaitingMenu = true
                 isGaming = false
+                currentRomName = nil
             } catch {
                 print("Failed to return to menu: \(error)")
             }
@@ -135,7 +139,25 @@ extension MainViewModel {
             // started during the round-trip.
             guard isConnected, !isTransferInProgress else { return }
 
-            let nowGaming = Self.isGamingFromRomName(info.romName)
+            let reportsMenu = !Self.isGamingFromRomName(info.romName)
+
+            // While we're waiting for menu_reset to settle, only trust an
+            // INFO that actually reports the menu binary. Anything else
+            // (still showing the old rom path, empty path, etc.) is the
+            // FPGA-reload echo and gets ignored.
+            let menuJustConfirmed: Bool
+            if awaitingMenu {
+                if reportsMenu {
+                    awaitingMenu = false
+                    menuJustConfirmed = true
+                } else {
+                    return
+                }
+            } else {
+                menuJustConfirmed = false
+            }
+
+            let nowGaming = !reportsMenu
             let previousRom = currentRomName
             currentRomName = Self.displayRomName(info.romName, gaming: nowGaming)
             let romChanged = previousRom != currentRomName
@@ -143,7 +165,7 @@ extension MainViewModel {
                 isGaming = nowGaming
             }
             // Refresh file list when transitioning to menu or rom context changes.
-            if !nowGaming && (romChanged || remoteFiles.isEmpty) {
+            if !nowGaming && (romChanged || remoteFiles.isEmpty || menuJustConfirmed) {
                 await refreshRemoteFiles()
             }
         } catch {
@@ -155,6 +177,7 @@ extension MainViewModel {
             if !stillThere {
                 isConnected = false
                 isGaming = false
+                awaitingMenu = false
                 currentRomName = nil
                 connectionStatus = "Disconnected"
                 remoteFiles = []

@@ -33,6 +33,12 @@ final class MainViewModel {
     var isGaming = false
     var currentRomName: String?
 
+    // Sticky flag set when the user asks the device to return to menu.
+    // Stays set until INFO confirms the menu binary is back, so a stale
+    // INFO response from the FPGA-reload window cannot bounce isGaming
+    // back to true and flicker the UI.
+    @ObservationIgnored var awaitingMenu = false
+
     @ObservationIgnored let usbClient = SD2SnesUSBClient.shared
     @ObservationIgnored let fileManager = LocalFileManager()
     @ObservationIgnored var transferTask: Task<Void, Never>?
