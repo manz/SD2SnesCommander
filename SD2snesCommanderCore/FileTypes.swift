@@ -29,7 +29,7 @@ public struct LocalFileItem {
     }
 }
 
-public struct RemoteFileItem {
+public struct RemoteFileItem: Codable, Sendable {
     public let name: String
     public let isDirectory: Bool
 
