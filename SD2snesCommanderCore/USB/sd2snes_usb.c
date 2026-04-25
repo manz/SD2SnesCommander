@@ -393,11 +393,11 @@ sd2snes_error_t sd2snes_download_file(const char* remote_path,
         return SD2SNES_ERROR_PROTOCOL_ERROR;
     }
 
-    // Get file size from response (stored at offset 252-255)
-    uint32_t file_size = response_buffer[252] |
-                        (response_buffer[253] << 8) |
-                        (response_buffer[254] << 16) |
-                        (response_buffer[255] << 24);
+    // Get file size from response header (U32BE at offset 252-255)
+    uint32_t file_size = ((uint32_t)response_buffer[252] << 24) |
+                         ((uint32_t)response_buffer[253] << 16) |
+                         ((uint32_t)response_buffer[254] <<  8) |
+                         ((uint32_t)response_buffer[255]);
 
     // Open local file for writing
     FILE* file = fopen(local_path, "wb");
@@ -935,11 +935,11 @@ static sd2snes_error_t receive_response(uint8_t* response_buffer, uint32_t* resp
         return SD2SNES_ERROR_INVALID_RESPONSE;
     }
 
-    // Get response size from header (little-endian at offset 252-255)
-    *response_size = response_buffer[252] |
-                    (response_buffer[253] << 8) |
-                    (response_buffer[254] << 16) |
-                    (response_buffer[255] << 24);
+    // Get response size from header (U32BE at offset 252-255)
+    *response_size = ((uint32_t)response_buffer[252] << 24) |
+                     ((uint32_t)response_buffer[253] << 16) |
+                     ((uint32_t)response_buffer[254] <<  8) |
+                     ((uint32_t)response_buffer[255]);
 
     return SD2SNES_SUCCESS;
 }
