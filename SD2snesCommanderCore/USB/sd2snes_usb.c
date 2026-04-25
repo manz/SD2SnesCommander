@@ -198,7 +198,14 @@ sd2snes_error_t sd2snes_list_files(const char* path,
     }
 
     if (response_buffer[5] != 0) {
-        return SD2SNES_ERROR_PROTOCOL_ERROR;
+        // Firmware still emits one data block (the 0xFF terminator) after a
+        // failed LS, so drain the pipe or the next command sees stale bytes.
+        // Byte 5 is just an OR'd boolean for LS (firmware does
+        // server_info.error |= f_opendir(...) != FR_OK), so we can't tell
+        // FR_NO_PATH apart from FR_INVALID_NAME — treat any non-zero as a
+        // path-level file error.
+        clear_usb_pipe(g_interface_interface, 2);
+        return SD2SNES_ERROR_FILE_ERROR;
     }
 
     *file_count = 0;
