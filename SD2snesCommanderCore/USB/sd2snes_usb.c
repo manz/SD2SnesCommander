@@ -10,6 +10,15 @@
 #include <IOKit/IOCFPlugIn.h>
 #include <IOKit/usb/IOUSBLib.h>
 
+// Verbose USB tracing. Off by default; build the framework with
+// -DSD2SNES_DEBUG=1 (or set GCC_PREPROCESSOR_DEFINITIONS=SD2SNES_DEBUG=1)
+// to dump per-op chatter to stderr.
+#ifdef SD2SNES_DEBUG
+#define SD2SNES_LOG(...) fSD2SNES_LOG(stderr, __VA_ARGS__)
+#else
+#define SD2SNES_LOG(...) ((void)0)
+#endif
+
 // Global state. The device interfaces are protected by g_lock; g_is_connected
 // is atomic so sd2snes_is_connected() can be polled without contending with
 // long-running transfers.
@@ -48,48 +57,48 @@ sd2snes_error_t sd2snes_connect(void) {
     sd2snes_error_t result;
     io_service_t device_service;
 
-    printf("[SD2SNES] Starting connection process...\n");
+    SD2SNES_LOG("[SD2SNES] Starting connection process...\n");
 
     if (g_is_connected) {
-        printf("[SD2SNES] Already connected, returning success\n");
+        SD2SNES_LOG("[SD2SNES] Already connected, returning success\n");
         return SD2SNES_SUCCESS;
     }
 
-    printf("[SD2SNES] Looking for SD2SNES device (VID: 0x%04x, PID: 0x%04x)\n",
+    SD2SNES_LOG("[SD2SNES] Looking for SD2SNES device (VID: 0x%04x, PID: 0x%04x)\n",
            SD2SNES_VENDOR_ID, SD2SNES_PRODUCT_ID);
 
     // Find SD2SNES device
     result = find_device(&device_service);
     if (result != SD2SNES_SUCCESS) {
-        printf("[SD2SNES] Device not found, error: %d\n", result);
+        SD2SNES_LOG("[SD2SNES] Device not found, error: %d\n", result);
         return result;
     }
-    printf("[SD2SNES] Device found successfully\n");
+    SD2SNES_LOG("[SD2SNES] Device found successfully\n");
 
     // Open device
-    printf("[SD2SNES] Opening device...\n");
+    SD2SNES_LOG("[SD2SNES] Opening device...\n");
     result = open_device(device_service);
     if (result != SD2SNES_SUCCESS) {
-        printf("[SD2SNES] Failed to open device, error: %d\n", result);
+        SD2SNES_LOG("[SD2SNES] Failed to open device, error: %d\n", result);
         IOObjectRelease(device_service);
         return result;
     }
-    printf("[SD2SNES] Device opened successfully\n");
+    SD2SNES_LOG("[SD2SNES] Device opened successfully\n");
 
     // Open interface
-    printf("[SD2SNES] Opening interface...\n");
+    SD2SNES_LOG("[SD2SNES] Opening interface...\n");
     result = open_interface();
     if (result != SD2SNES_SUCCESS) {
-        printf("[SD2SNES] Failed to open interface, error: %d\n", result);
+        SD2SNES_LOG("[SD2SNES] Failed to open interface, error: %d\n", result);
         sd2snes_disconnect();
         IOObjectRelease(device_service);
         return result;
     }
-    printf("[SD2SNES] Interface opened successfully\n");
+    SD2SNES_LOG("[SD2SNES] Interface opened successfully\n");
 
     IOObjectRelease(device_service);
     g_is_connected = true;
-    printf("[SD2SNES] Connection completed successfully!\n");
+    SD2SNES_LOG("[SD2SNES] Connection completed successfully!\n");
     return SD2SNES_SUCCESS;
 }
 
@@ -131,16 +140,16 @@ sd2snes_error_t clear_usb_pipe(IOUSBInterfaceInterface300 **interface_interface,
         
         if (result == kIOReturnSuccess) {
             bytes_read += buffer_size;
-            printf("Cleared %u bytes from pipe %u\n", buffer_size, pipeRef);
+            SD2SNES_LOG("Cleared %u bytes from pipe %u\n", buffer_size, pipeRef);
             // Reset buffer_size for the next read
             buffer_size = USB_BLOCK_SIZE;
         } else if (result == kIOUSBTransactionTimeout) {
             // This is the expected result when the pipe is empty
-            printf("Pipe %u is empty.\n", pipeRef);
+            SD2SNES_LOG("Pipe %u is empty.\n", pipeRef);
             return SD2SNES_SUCCESS;
         } else {
             // A genuine error occurred
-            printf("Error clearing pipe %u: 0x%08x\n", pipeRef, result);
+            SD2SNES_LOG("Error clearing pipe %u: 0x%08x\n", pipeRef, result);
             return SD2SNES_ERROR_TRANSFER_FAILED;
         }
     } while (result == kIOReturnSuccess); // Continue as long as we successfully read data
@@ -155,7 +164,7 @@ static void recover_pipe(IOUSBInterfaceInterface300 **interface_interface, UInt8
     if (!interface_interface || !*interface_interface) return;
     kern_return_t result = (*interface_interface)->ClearPipeStall(interface_interface, pipeRef);
     if (result != kIOReturnSuccess) {
-        printf("[SD2SNES] recover_pipe ClearPipeStall pipe %u: 0x%08x\n", pipeRef, result);
+        SD2SNES_LOG("[SD2SNES] recover_pipe ClearPipeStall pipe %u: 0x%08x\n", pipeRef, result);
         if (result == kIOReturnNoDevice ||
             result == kIOReturnNotResponding ||
             result == kIOReturnNotAttached ||
@@ -164,7 +173,7 @@ static void recover_pipe(IOUSBInterfaceInterface300 **interface_interface, UInt8
             return;
         }
     } else {
-        printf("[SD2SNES] recover_pipe pipe %u cleared\n", pipeRef);
+        SD2SNES_LOG("[SD2SNES] recover_pipe pipe %u cleared\n", pipeRef);
     }
     clear_usb_pipe(interface_interface, pipeRef);
 }
@@ -309,7 +318,7 @@ sd2snes_error_t sd2snes_list_files(const char* path,
         }
     }
 
-    printf("[SD2SNES] C level complete: parsed %zu files total%s\n",
+    SD2SNES_LOG("[SD2SNES] C level complete: parsed %zu files total%s\n",
            *file_count, overflow ? " (buffer overflow)" : "");
     return overflow ? SD2SNES_ERROR_BUFFER_OVERFLOW : SD2SNES_SUCCESS;
 }
@@ -583,7 +592,7 @@ sd2snes_error_t sd2snes_reset_device(void) {
     // does.
     result = receive_response(response_buffer, &response_size);
     if (result != SD2SNES_SUCCESS) {
-        printf("[SD2SNES] reset response missed (%d) — proceeding\n", result);
+        SD2SNES_LOG("[SD2SNES] reset response missed (%d) — proceeding\n", result);
         return SD2SNES_SUCCESS;
     }
 
@@ -615,7 +624,7 @@ sd2snes_error_t sd2snes_menu_reset(void) {
     // start before the packet drains.
     result = receive_response(response_buffer, &response_size);
     if (result != SD2SNES_SUCCESS) {
-        printf("[SD2SNES] menu_reset response missed (%d) — proceeding\n", result);
+        SD2SNES_LOG("[SD2SNES] menu_reset response missed (%d) — proceeding\n", result);
         return SD2SNES_SUCCESS;
     }
 
@@ -711,19 +720,19 @@ static sd2snes_error_t find_device(io_service_t *device_service) {
     // This works better than IOUSBHostDevice which "misses some devices"
     static const char *darwin_device_class = "IOUSBDevice";
 
-    printf("[SD2SNES] Creating matching dictionary for class: %s\n", darwin_device_class);
+    SD2SNES_LOG("[SD2SNES] Creating matching dictionary for class: %s\n", darwin_device_class);
     CFMutableDictionaryRef matching_dict = IOServiceMatching(darwin_device_class);
     if (!matching_dict) {
-        printf("[SD2SNES] ERROR: Failed to create matching dictionary\n");
+        SD2SNES_LOG("[SD2SNES] ERROR: Failed to create matching dictionary\n");
         return SD2SNES_ERROR_DEVICE_NOT_FOUND;
     }
-    printf("[SD2SNES] Matching dictionary created\n");
+    SD2SNES_LOG("[SD2SNES] Matching dictionary created\n");
 
     // Set vendor and product ID (using IOUSBDevice property names)
     CFNumberRef vendor_id = CFNumberCreate(kCFAllocatorDefault, kCFNumberShortType, &(UInt16){SD2SNES_VENDOR_ID});
     CFNumberRef product_id = CFNumberCreate(kCFAllocatorDefault, kCFNumberShortType, &(UInt16){SD2SNES_PRODUCT_ID});
 
-    printf("[SD2SNES] Setting matching criteria: VID=0x%04x, PID=0x%04x\n",
+    SD2SNES_LOG("[SD2SNES] Setting matching criteria: VID=0x%04x, PID=0x%04x\n",
            SD2SNES_VENDOR_ID, SD2SNES_PRODUCT_ID);
     CFDictionarySetValue(matching_dict, CFSTR(kUSBVendorID), vendor_id);
     CFDictionarySetValue(matching_dict, CFSTR(kUSBProductID), product_id);
@@ -733,26 +742,26 @@ static sd2snes_error_t find_device(io_service_t *device_service) {
 
     // Find matching services
     io_iterator_t iterator;
-    printf("[SD2SNES] Searching for matching USB devices...\n");
+    SD2SNES_LOG("[SD2SNES] Searching for matching USB devices...\n");
     kern_return_t result = IOServiceGetMatchingServices(kIOMainPortDefault, matching_dict, &iterator);
 
     if (result != KERN_SUCCESS) {
-        printf("[SD2SNES] ERROR: IOServiceGetMatchingServices failed with code: 0x%08x\n", result);
+        SD2SNES_LOG("[SD2SNES] ERROR: IOServiceGetMatchingServices failed with code: 0x%08x\n", result);
         return SD2SNES_ERROR_DEVICE_NOT_FOUND;
     }
-    printf("[SD2SNES] Device search completed, checking results...\n");
+    SD2SNES_LOG("[SD2SNES] Device search completed, checking results...\n");
 
     // Get first matching device
     *device_service = IOIteratorNext(iterator);
 
     if (*device_service == 0) {
-        printf("[SD2SNES] ERROR: No matching devices found\n");
-        printf("[SD2SNES] Make sure SD2SNES is connected and powered on\n");
+        SD2SNES_LOG("[SD2SNES] ERROR: No matching devices found\n");
+        SD2SNES_LOG("[SD2SNES] Make sure SD2SNES is connected and powered on\n");
         IOObjectRelease(iterator);
         return SD2SNES_ERROR_DEVICE_NOT_FOUND;
     }
 
-    printf("[SD2SNES] Found matching device (service: 0x%08x)\n", *device_service);
+    SD2SNES_LOG("[SD2SNES] Found matching device (service: 0x%08x)\n", *device_service);
     IOObjectRelease(iterator);
     return SD2SNES_SUCCESS;
 }
@@ -762,7 +771,7 @@ static sd2snes_error_t open_device(io_service_t device_service) {
     SInt32 score;
 
     // Try to create plugin interface for IOUSBDevice
-    printf("[SD2SNES] Creating plugin interface for device service 0x%08x\n", device_service);
+    SD2SNES_LOG("[SD2SNES] Creating plugin interface for device service 0x%08x\n", device_service);
     kern_return_t result = IOCreatePlugInInterfaceForService(
         device_service,
         kIOUSBDeviceUserClientTypeID,
@@ -771,14 +780,14 @@ static sd2snes_error_t open_device(io_service_t device_service) {
         &score);
 
     if (result != KERN_SUCCESS || !plugin_interface) {
-        printf("[SD2SNES] ERROR: Failed to create plugin interface, result: 0x%08x, interface: %p\n",
+        SD2SNES_LOG("[SD2SNES] ERROR: Failed to create plugin interface, result: 0x%08x, interface: %p\n",
                result, plugin_interface);
         return SD2SNES_ERROR_CONNECTION_FAILED;
     }
-    printf("[SD2SNES] Plugin interface created successfully (score: %d)\n", score);
+    SD2SNES_LOG("[SD2SNES] Plugin interface created successfully (score: %d)\n", score);
 
     // Get device interface
-    printf("[SD2SNES] Querying for IOUSBDeviceInterface320...\n");
+    SD2SNES_LOG("[SD2SNES] Querying for IOUSBDeviceInterface320...\n");
     HRESULT query_result = (*plugin_interface)->QueryInterface(
         plugin_interface,
         CFUUIDGetUUIDBytes(kIOUSBDeviceInterfaceID320),
@@ -787,71 +796,71 @@ static sd2snes_error_t open_device(io_service_t device_service) {
     (*plugin_interface)->Release(plugin_interface);
 
     if (query_result != S_OK) {
-        printf("[SD2SNES] ERROR: Failed to query device interface, HRESULT: 0x%08lx\n", (long)query_result);
+        SD2SNES_LOG("[SD2SNES] ERROR: Failed to query device interface, HRESULT: 0x%08lx\n", (long)query_result);
         return SD2SNES_ERROR_CONNECTION_FAILED;
     }
-    printf("[SD2SNES] Device interface obtained successfully\n");
+    SD2SNES_LOG("[SD2SNES] Device interface obtained successfully\n");
 
     // Open the device
-    printf("[SD2SNES] Opening USB device interface...\n");
+    SD2SNES_LOG("[SD2SNES] Opening USB device interface...\n");
     result = (*g_device_interface)->USBDeviceOpen(g_device_interface);
     if (result != kIOReturnSuccess) {
-        printf("[SD2SNES] Initial open failed (0x%08x), attempting to seize device...\n", result);
+        SD2SNES_LOG("[SD2SNES] Initial open failed (0x%08x), attempting to seize device...\n", result);
 
         // Try to seize the device from another driver
         result = (*g_device_interface)->USBDeviceOpenSeize(g_device_interface);
         if (result != kIOReturnSuccess) {
-            printf("[SD2SNES] ERROR: Failed to seize USB device, IOReturn: 0x%08x\n", result);
+            SD2SNES_LOG("[SD2SNES] ERROR: Failed to seize USB device, IOReturn: 0x%08x\n", result);
             (*g_device_interface)->Release(g_device_interface);
             g_device_interface = NULL;
             return SD2SNES_ERROR_CONNECTION_FAILED;
         }
-        printf("[SD2SNES] Device seized successfully from existing driver\n");
+        SD2SNES_LOG("[SD2SNES] Device seized successfully from existing driver\n");
     } else {
-        printf("[SD2SNES] USB device opened successfully (no seizure required)\n");
+        SD2SNES_LOG("[SD2SNES] USB device opened successfully (no seizure required)\n");
     }
     return SD2SNES_SUCCESS;
 }
 
 static sd2snes_error_t open_interface(void) {
-    printf("[SD2SNES] Opening USB interface...\n");
+    SD2SNES_LOG("[SD2SNES] Opening USB interface...\n");
     if (!g_device_interface) {
-        printf("[SD2SNES] ERROR: Device interface is NULL\n");
+        SD2SNES_LOG("[SD2SNES] ERROR: Device interface is NULL\n");
         return SD2SNES_ERROR_CONNECTION_FAILED;
     }
 
     // Create interface iterator for CDC Data Interface
-    printf("[SD2SNES] Creating interface iterator...\n");
+    SD2SNES_LOG("[SD2SNES] Creating interface iterator...\n");
     IOUSBFindInterfaceRequest request;
     request.bInterfaceClass = 0x0A;          // CDC Data Interface Class
     request.bInterfaceSubClass = 0x00;       // No subclass for data interface
     request.bInterfaceProtocol = 0x00;       // No protocol specified
     request.bAlternateSetting = kIOUSBFindInterfaceDontCare;
 
-    printf("[SD2SNES] Interface search criteria: class=0x0A (CDC Data), subclass=0x00, protocol=0x00, setting=any\n");
+    SD2SNES_LOG("[SD2SNES] Interface search criteria: class=0x0A (CDC Data), subclass=0x00, protocol=0x00, setting=any\n");
 
     io_iterator_t iterator;
     kern_return_t result = (*g_device_interface)->CreateInterfaceIterator(g_device_interface, &request, &iterator);
 
     if (result != kIOReturnSuccess) {
-        printf("[SD2SNES] ERROR: Failed to create interface iterator, IOReturn: 0x%08x\n", result);
+        SD2SNES_LOG("[SD2SNES] ERROR: Failed to create interface iterator, IOReturn: 0x%08x\n", result);
         return SD2SNES_ERROR_CONNECTION_FAILED;
     }
-    printf("[SD2SNES] Interface iterator created successfully\n");
+    SD2SNES_LOG("[SD2SNES] Interface iterator created successfully\n");
 
     // Get first interface (CDC data interface)
-    printf("[SD2SNES] Getting first interface from iterator...\n");
+    SD2SNES_LOG("[SD2SNES] Getting first interface from iterator...\n");
     io_service_t interface_service = IOIteratorNext(iterator);
     IOObjectRelease(iterator);
 
     if (interface_service == 0) {
-        printf("[SD2SNES] ERROR: No interface found\n");
+        SD2SNES_LOG("[SD2SNES] ERROR: No interface found\n");
         return SD2SNES_ERROR_CONNECTION_FAILED;
     }
-    printf("[SD2SNES] Interface service found: 0x%08x\n", interface_service);
+    SD2SNES_LOG("[SD2SNES] Interface service found: 0x%08x\n", interface_service);
 
     // Create plugin interface for the interface
-    printf("[SD2SNES] Creating plugin interface for USB interface...\n");
+    SD2SNES_LOG("[SD2SNES] Creating plugin interface for USB interface...\n");
     IOCFPlugInInterface **plugin_interface = NULL;
     SInt32 score;
 
@@ -865,14 +874,14 @@ static sd2snes_error_t open_interface(void) {
     IOObjectRelease(interface_service);
 
     if (result != KERN_SUCCESS || !plugin_interface) {
-        printf("[SD2SNES] ERROR: Failed to create interface plugin, result: 0x%08x, interface: %p\n",
+        SD2SNES_LOG("[SD2SNES] ERROR: Failed to create interface plugin, result: 0x%08x, interface: %p\n",
                result, plugin_interface);
         return SD2SNES_ERROR_CONNECTION_FAILED;
     }
-    printf("[SD2SNES] Interface plugin created successfully (score: %d)\n", score);
+    SD2SNES_LOG("[SD2SNES] Interface plugin created successfully (score: %d)\n", score);
 
     // Get interface interface
-    printf("[SD2SNES] Querying for IOUSBInterfaceInterface300...\n");
+    SD2SNES_LOG("[SD2SNES] Querying for IOUSBInterfaceInterface300...\n");
     HRESULT query_result = (*plugin_interface)->QueryInterface(
         plugin_interface,
         CFUUIDGetUUIDBytes(kIOUSBInterfaceInterfaceID300),
@@ -881,28 +890,28 @@ static sd2snes_error_t open_interface(void) {
     (*plugin_interface)->Release(plugin_interface);
 
     if (query_result != S_OK) {
-        printf("[SD2SNES] ERROR: Failed to query interface interface, HRESULT: 0x%08lx\n", (long)query_result);
+        SD2SNES_LOG("[SD2SNES] ERROR: Failed to query interface interface, HRESULT: 0x%08lx\n", (long)query_result);
         return SD2SNES_ERROR_CONNECTION_FAILED;
     }
-    printf("[SD2SNES] Interface interface obtained successfully\n");
+    SD2SNES_LOG("[SD2SNES] Interface interface obtained successfully\n");
 
     // Open the interface
-    printf("[SD2SNES] Opening USB interface...\n");
+    SD2SNES_LOG("[SD2SNES] Opening USB interface...\n");
     result = (*g_interface_interface)->USBInterfaceOpen(g_interface_interface);
     if (result != kIOReturnSuccess) {
-        printf("[SD2SNES] Initial interface open failed (0x%08x), attempting to seize interface...\n", result);
+        SD2SNES_LOG("[SD2SNES] Initial interface open failed (0x%08x), attempting to seize interface...\n", result);
 
         // Try to seize the interface from another driver
         result = (*g_interface_interface)->USBInterfaceOpenSeize(g_interface_interface);
         if (result != kIOReturnSuccess) {
-            printf("[SD2SNES] ERROR: Failed to seize USB interface, IOReturn: 0x%08x\n", result);
+            SD2SNES_LOG("[SD2SNES] ERROR: Failed to seize USB interface, IOReturn: 0x%08x\n", result);
             (*g_interface_interface)->Release(g_interface_interface);
             g_interface_interface = NULL;
             return SD2SNES_ERROR_CONNECTION_FAILED;
         }
-        printf("[SD2SNES] Interface seized successfully from existing driver\n");
+        SD2SNES_LOG("[SD2SNES] Interface seized successfully from existing driver\n");
     } else {
-        printf("[SD2SNES] USB interface opened successfully (no seizure required)\n");
+        SD2SNES_LOG("[SD2SNES] USB interface opened successfully (no seizure required)\n");
     }
     return SD2SNES_SUCCESS;
 }
@@ -913,7 +922,7 @@ static sd2snes_error_t send_packet(sd2snes_opcode_t opcode, sd2snes_space_t spac
     if (!g_interface_interface) {
         return SD2SNES_ERROR_CONNECTION_FAILED;
     }
-    printf("[SD2SNES] sending packed for opcode %d space %d.\n", opcode, space);
+    SD2SNES_LOG("[SD2SNES] sending packed for opcode %d space %d.\n", opcode, space);
     // Create USB packet
     uint8_t packet[USB_BLOCK_SIZE];
     memset(packet, 0, USB_BLOCK_SIZE);
@@ -967,14 +976,14 @@ static sd2snes_error_t receive_response(uint8_t* response_buffer, uint32_t* resp
             g_interface_interface, 2, response_buffer, &size, 5000, 5000);
 
         if (result != kIOReturnSuccess) {
-            printf("[SD2SNES] receive_response ReadPipeTO failed: 0x%08x\n", result);
+            SD2SNES_LOG("[SD2SNES] receive_response ReadPipeTO failed: 0x%08x\n", result);
             recover_pipe(g_interface_interface, 2);
             return SD2SNES_ERROR_TRANSFER_FAILED;
         }
         attempts++;
     } while (size == 0 && attempts < 4);
 
-    printf("[SD2SNES] receive_response: read %u bytes (attempts=%d), first 8: %02x %02x %02x %02x %02x %02x %02x %02x\n",
+    SD2SNES_LOG("[SD2SNES] receive_response: read %u bytes (attempts=%d), first 8: %02x %02x %02x %02x %02x %02x %02x %02x\n",
            size, attempts,
            response_buffer[0], response_buffer[1], response_buffer[2], response_buffer[3],
            response_buffer[4], response_buffer[5], response_buffer[6], response_buffer[7]);
@@ -1026,7 +1035,7 @@ static sd2snes_error_t receive_bulk_data(uint8_t* buffer, uint32_t size, uint32_
         result = (*g_interface_interface)->ReadPipeTO(
             g_interface_interface, 2, buffer, &actual_size, 5000, 10000);
         if (result != kIOReturnSuccess) {
-            printf("[SD2SNES] receive_bulk_data ReadPipeTO failed: 0x%08x\n", result);
+            SD2SNES_LOG("[SD2SNES] receive_bulk_data ReadPipeTO failed: 0x%08x\n", result);
             recover_pipe(g_interface_interface, 2);
             return SD2SNES_ERROR_TRANSFER_FAILED;
         }
