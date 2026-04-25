@@ -60,7 +60,7 @@ struct SD2SnesCLI {
     static func handleInfo() async {
         print("Connecting to SD2SNES device...")
 
-        let client = SD2SnesUSBClient()
+        let client = SD2SnesUSBClient.shared
 
         do {
             try await client.connect()
@@ -86,7 +86,7 @@ struct SD2SnesCLI {
 
         print("Connecting to SD2SNES device...")
 
-        let client = SD2SnesUSBClient()
+        let client = SD2SnesUSBClient.shared
 
         do {
             try await client.connect()
@@ -132,7 +132,7 @@ struct SD2SnesCLI {
 
         print("Connecting to SD2SNES device...")
 
-        let client = SD2SnesUSBClient()
+        let client = SD2SnesUSBClient.shared
 
         do {
             try await client.connect()

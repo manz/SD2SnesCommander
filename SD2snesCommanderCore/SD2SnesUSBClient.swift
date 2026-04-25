@@ -1,11 +1,15 @@
 import Foundation
 import os.log
 
-// SD2SNES USB Client - Swift wrapper for C implementation
+// SD2SNES USB Client - Swift wrapper for C implementation.
+// The C layer holds process-wide globals for the USB device, so all access
+// must funnel through a single client instance per process.
 public actor SD2SnesUSBClient {
+    public static let shared = SD2SnesUSBClient()
+
     private let logger = Logger(subsystem: "SD2SnesCommanderCore", category: "USB")
 
-    public init() {}
+    private init() {}
 
     deinit {
         sd2snes_disconnect()
@@ -51,35 +55,47 @@ public actor SD2SnesUSBClient {
     // MARK: - File Operations
 
     public func listFiles(path: String = "") async throws -> [RemoteFileItem] {
-        logger.info("🔍 Swift: Requesting file list for path: '\(path)'")
+        logger.info("Listing files at path: '\(path)'")
 
-        let maxFiles = 100
-        var files = Array(repeating: sd2snes_file_info_t(), count: maxFiles)
-        var fileCount: Int = 0
+        // Grow the buffer until the C side stops returning BUFFER_OVERFLOW.
+        // Capped so a runaway listing can't allocate forever.
+        var capacity = 256
+        let maxCapacity = 16384
+        while true {
+            var files = Array(repeating: sd2snes_file_info_t(), count: capacity)
+            var fileCount: Int = 0
+            let result = sd2snes_list_files(path, &files, capacity, &fileCount)
 
-        let result = sd2snes_list_files(path, &files, maxFiles, &fileCount)
-        guard result == SD2SNES_SUCCESS else {
+            if result == SD2SNES_SUCCESS {
+                logger.info("Found \(fileCount) entries")
+                return Self.unpackFileEntries(files, count: fileCount)
+            }
+
+            if result == SD2SNES_ERROR_BUFFER_OVERFLOW && capacity < maxCapacity {
+                capacity = min(capacity * 2, maxCapacity)
+                logger.info("List buffer overflow, retrying with capacity \(capacity)")
+                continue
+            }
+
             logger.error("Failed to list files: \(result.rawValue)")
             throw SD2SnesUSBError(from: result)
         }
+    }
 
-        logger.info("Found \(fileCount) files/directories")
-
-        var remoteFiles: [RemoteFileItem] = []
-        for i in 0..<fileCount {
+    private static func unpackFileEntries(_ files: [sd2snes_file_info_t], count: Int) -> [RemoteFileItem] {
+        var out: [RemoteFileItem] = []
+        out.reserveCapacity(count)
+        for i in 0..<count {
             let fileInfo = files[i]
-
+            let nameSize = MemoryLayout.size(ofValue: fileInfo.name)
             let fileName = withUnsafePointer(to: fileInfo.name) {
-                $0.withMemoryRebound(to: CChar.self, capacity: 256) {
+                $0.withMemoryRebound(to: CChar.self, capacity: nameSize) {
                     String(cString: $0, encoding: .utf8) ?? "Unknown"
                 }
             }
-
-            let isDirectory = fileInfo.is_directory
-            remoteFiles.append(RemoteFileItem(name: fileName, isDirectory: isDirectory))
+            out.append(RemoteFileItem(name: fileName, isDirectory: fileInfo.is_directory))
         }
-
-        return remoteFiles
+        return out
     }
 
     public func uploadFile(
@@ -203,18 +219,15 @@ public struct RemoteInfo {
         self.currentConfiguration = cStruct.current_configuration
         self.firmwareVersion2 = cStruct.firmware_version2
 
-        self.romName = withUnsafePointer(to: cStruct.rom_name) {
-            $0.withMemoryRebound(to: CChar.self, capacity: 256) {
-                String(cString: $0, encoding: .utf8)
-            }
-        }
-        self.firmwareString = withUnsafePointer(to: cStruct.firmware_string) {
-            $0.withMemoryRebound(to: CChar.self, capacity: 64) {
-                String(cString: $0, encoding: .utf8)
-            }
-        }
-        self.deviceName = withUnsafePointer(to: cStruct.device_name) {
-            $0.withMemoryRebound(to: CChar.self, capacity: 64) {
+        self.romName = Self.cStringFromTuple(cStruct.rom_name)
+        self.firmwareString = Self.cStringFromTuple(cStruct.firmware_string)
+        self.deviceName = Self.cStringFromTuple(cStruct.device_name)
+    }
+
+    private static func cStringFromTuple<T>(_ tuple: T) -> String? {
+        let size = MemoryLayout<T>.size
+        return withUnsafePointer(to: tuple) {
+            $0.withMemoryRebound(to: CChar.self, capacity: size) {
                 String(cString: $0, encoding: .utf8)
             }
         }

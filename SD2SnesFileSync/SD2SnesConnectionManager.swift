@@ -13,7 +13,7 @@ class SD2SnesConnectionManager {
     var files: [RemoteFileItem] = []
 
     @ObservationIgnored private let logger = Logger(subsystem: "SD2SnesFileSync", category: "Connection")
-    @ObservationIgnored private let usbClient = SD2SnesUSBClient()
+    @ObservationIgnored private let usbClient = SD2SnesUSBClient.shared
     @ObservationIgnored private var refreshTask: Task<Void, Never>?
 
     private init() {}

@@ -33,7 +33,7 @@ class MainViewModel {
     var isGaming = false
     var currentRomName: String?
 
-    @ObservationIgnored let usbClient = SD2SnesUSBClient()
+    @ObservationIgnored let usbClient = SD2SnesUSBClient.shared
     @ObservationIgnored let fileManager = LocalFileManager()
     @ObservationIgnored var transferTask: Task<Void, Never>?
     @ObservationIgnored var infoPollTask: Task<Void, Never>?
