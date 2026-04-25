@@ -44,10 +44,12 @@ public struct IPSPatcher {
 
     public static func createTemporaryPatchedFile(romPath: String, ipsPath: String) throws -> String {
         let romURL = URL(fileURLWithPath: romPath)
-        let tempURL = FileManager.default.temporaryDirectory.appendingPathComponent("patched_\(romURL.lastPathComponent)")
+        let tempFileName = "patched_\(UUID().uuidString)_\(romURL.lastPathComponent)"
+        let tempPath = URL(fileURLWithPath: NSTemporaryDirectory())
+            .appendingPathComponent(tempFileName).path
 
-        try applyPatch(romPath: romPath, ipsPath: ipsPath, outputPath: tempURL.path)
-        return tempURL.path
+        try applyPatch(romPath: romPath, ipsPath: ipsPath, outputPath: tempPath)
+        return tempPath
     }
 
     public static func findIPSPatch(for romPath: String) -> String? {
@@ -55,20 +57,12 @@ public struct IPSPatcher {
         let romDirectory = romURL.deletingLastPathComponent()
         let romName = romURL.deletingPathExtension().lastPathComponent
 
-        let ipsPatterns = [
-            "\(romName).ips",
-            "\(romName).IPS",
-            "\(romURL.deletingPathExtension().path).ips",
-            "\(romURL.deletingPathExtension().path).IPS"
-        ]
-
-        for pattern in ipsPatterns {
-            let ipsURL = romDirectory.appendingPathComponent(pattern)
-            if FileManager.default.fileExists(atPath: ipsURL.path) {
-                return ipsURL.path
+        for ext in ["ips", "IPS"] {
+            let candidate = romDirectory.appendingPathComponent("\(romName).\(ext)").path
+            if FileManager.default.fileExists(atPath: candidate) {
+                return candidate
             }
         }
-
         return nil
     }
 
@@ -77,61 +71,77 @@ public struct IPSPatcher {
             throw IPSError.invalidIPSFile
         }
 
-        // Check IPS header "PATCH"
+        // Header "PATCH"
         let header = ipsData.subdata(in: 0..<5)
-        let expectedHeader = "PATCH".data(using: .ascii)!
-        guard header == expectedHeader else {
+        guard String(data: header, encoding: .ascii) == "PATCH" else {
             throw IPSError.invalidIPSFile
         }
 
-        var patchedData = romData
+        var patchedData = Data(romData)
         var offset = 5
 
         while offset < ipsData.count - 3 {
-            // Check for EOF marker
+            // EOF marker
             let eofMarker = ipsData.subdata(in: offset..<offset+3)
-            if eofMarker == "EOF".data(using: .ascii)! {
+            if eofMarker == Data([0x45, 0x4F, 0x46]) { // "EOF"
                 break
             }
 
-            // Read 3-byte address
-            let addressBytes = ipsData.subdata(in: offset..<offset+3)
-            let address = (Int(addressBytes[offset]) << 16) | (Int(addressBytes[offset+1]) << 8) | Int(addressBytes[offset+2])
+            guard offset + 5 <= ipsData.count else {
+                throw IPSError.invalidPatch
+            }
+
+            // 24-bit offset
+            let offsetBytes = ipsData.subdata(in: offset..<offset+3)
+            let patchOffset = Int(offsetBytes[0]) << 16 | Int(offsetBytes[1]) << 8 | Int(offsetBytes[2])
             offset += 3
 
-            // Read 2-byte length
-            let lengthBytes = ipsData.subdata(in: offset..<offset+2)
-            let length = (Int(lengthBytes[offset]) << 8) | Int(lengthBytes[offset+1])
+            // 16-bit size
+            let sizeBytes = ipsData.subdata(in: offset..<offset+2)
+            let size = Int(sizeBytes[0]) << 8 | Int(sizeBytes[1])
             offset += 2
 
-            if length == 0 {
-                // RLE encoding
-                let rleLength = (Int(ipsData[offset]) << 8) | Int(ipsData[offset+1])
+            if size == 0 {
+                // RLE
+                guard offset + 2 <= ipsData.count else {
+                    throw IPSError.invalidPatch
+                }
+                let rleSizeBytes = ipsData.subdata(in: offset..<offset+2)
+                let rleSize = Int(rleSizeBytes[0]) << 8 | Int(rleSizeBytes[1])
                 offset += 2
+
+                guard offset < ipsData.count else {
+                    throw IPSError.invalidPatch
+                }
                 let fillByte = ipsData[offset]
                 offset += 1
 
-                // Extend data if necessary
-                let requiredSize = address + rleLength
+                let requiredSize = patchOffset + rleSize
                 if patchedData.count < requiredSize {
                     patchedData.append(Data(count: requiredSize - patchedData.count))
                 }
-
-                // Fill with RLE data
-                patchedData.replaceSubrange(address..<address+rleLength, with: Data(repeating: fillByte, count: rleLength))
+                for i in 0..<rleSize {
+                    if patchOffset + i < patchedData.count {
+                        patchedData[patchOffset + i] = fillByte
+                    }
+                }
             } else {
                 // Normal patch
-                let patchBytes = ipsData.subdata(in: offset..<offset+length)
-                offset += length
+                guard offset + size <= ipsData.count else {
+                    throw IPSError.invalidPatch
+                }
+                let patchData = ipsData.subdata(in: offset..<offset+size)
+                offset += size
 
-                // Extend data if necessary
-                let requiredSize = address + length
+                let requiredSize = patchOffset + size
                 if patchedData.count < requiredSize {
                     patchedData.append(Data(count: requiredSize - patchedData.count))
                 }
-
-                // Apply patch
-                patchedData.replaceSubrange(address..<address+length, with: patchBytes)
+                for i in 0..<size {
+                    if patchOffset + i < patchedData.count {
+                        patchedData[patchOffset + i] = patchData[i]
+                    }
+                }
             }
         }
 
