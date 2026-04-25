@@ -3,15 +3,32 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <pthread.h>
+#include <stdatomic.h>
 #include <CoreFoundation/CoreFoundation.h>
 #include <IOKit/IOKitLib.h>
 #include <IOKit/IOCFPlugIn.h>
 #include <IOKit/usb/IOUSBLib.h>
 
-// Global state
+// Global state. The device interfaces are protected by g_lock; g_is_connected
+// is atomic so sd2snes_is_connected() can be polled without contending with
+// long-running transfers.
+static pthread_mutex_t g_lock = PTHREAD_MUTEX_INITIALIZER;
 static IOUSBDeviceInterface320 **g_device_interface = NULL;
 static IOUSBInterfaceInterface300 **g_interface_interface = NULL;
-static bool g_is_connected = false;
+static atomic_bool g_is_connected = false;
+
+// RAII-style lock guard via clang/gcc cleanup attribute. Tag a public entry
+// point body with WITH_LOCK; to serialize access to the device until the
+// function returns from any path.
+static inline void sd2snes_unlock_guard(pthread_mutex_t **m) {
+    pthread_mutex_unlock(*m);
+}
+#define WITH_LOCK                                                              \
+    pthread_mutex_lock(&g_lock);                                               \
+    __attribute__((cleanup(sd2snes_unlock_guard)))                             \
+        pthread_mutex_t *_sd2snes_lock_guard = &g_lock;                        \
+    (void)_sd2snes_lock_guard
 
 // Internal function declarations
 static sd2snes_error_t find_device(io_service_t *device_service);
@@ -27,6 +44,7 @@ static sd2snes_error_t receive_bulk_data(uint8_t* buffer, uint32_t size, uint32_
 // Device Management Functions
 
 sd2snes_error_t sd2snes_connect(void) {
+    WITH_LOCK;
     sd2snes_error_t result;
     io_service_t device_service;
 
@@ -76,6 +94,7 @@ sd2snes_error_t sd2snes_connect(void) {
 }
 
 void sd2snes_disconnect(void) {
+    WITH_LOCK;
     if (g_interface_interface) {
         (*g_interface_interface)->USBInterfaceClose(g_interface_interface);
         (*g_interface_interface)->Release(g_interface_interface);
@@ -92,7 +111,8 @@ void sd2snes_disconnect(void) {
 }
 
 bool sd2snes_is_connected(void) {
-    return g_is_connected;
+    // Lock-free atomic read so this stays cheap during long transfers.
+    return atomic_load(&g_is_connected);
 }
 
 // Function to clear a USB pipe by reading all available data
@@ -147,6 +167,7 @@ sd2snes_error_t sd2snes_list_files(const char* path,
                                    sd2snes_file_info_t* files,
                                    size_t max_files,
                                    size_t* file_count) {
+    WITH_LOCK;
     if (!g_is_connected || !files || !file_count) {
         return SD2SNES_ERROR_INVALID_PARAMETER;
     }
@@ -271,6 +292,7 @@ sd2snes_error_t sd2snes_upload_file(const char* local_path,
                                     const char* remote_path,
                                     sd2snes_progress_callback_t progress_callback,
                                     void* userdata) {
+    WITH_LOCK;
     if (!g_is_connected || !local_path || !remote_path) {
         return SD2SNES_ERROR_INVALID_PARAMETER;
     }
@@ -367,6 +389,7 @@ sd2snes_error_t sd2snes_download_file(const char* remote_path,
                                       const char* local_path,
                                       sd2snes_progress_callback_t progress_callback,
                                       void* userdata) {
+    WITH_LOCK;
     if (!g_is_connected || !remote_path || !local_path) {
         return SD2SNES_ERROR_INVALID_PARAMETER;
     }
@@ -443,6 +466,7 @@ sd2snes_error_t sd2snes_download_file(const char* remote_path,
 }
 
 sd2snes_error_t sd2snes_delete_file(const char* remote_path) {
+    WITH_LOCK;
     if (!g_is_connected || !remote_path) {
         return SD2SNES_ERROR_INVALID_PARAMETER;
     }
@@ -478,6 +502,7 @@ sd2snes_error_t sd2snes_delete_file(const char* remote_path) {
 // Device Control Functions
 
 sd2snes_error_t sd2snes_boot_rom(const char* rom_path) {
+    WITH_LOCK;
     if (!g_is_connected || !rom_path) {
         return SD2SNES_ERROR_INVALID_PARAMETER;
     }
@@ -511,6 +536,7 @@ sd2snes_error_t sd2snes_boot_rom(const char* rom_path) {
 }
 
 sd2snes_error_t sd2snes_reset_device(void) {
+    WITH_LOCK;
     if (!g_is_connected) {
         return SD2SNES_ERROR_INVALID_PARAMETER;
     }
@@ -543,6 +569,7 @@ sd2snes_error_t sd2snes_reset_device(void) {
 }
 
 sd2snes_error_t sd2snes_menu_reset(void) {
+    WITH_LOCK;
     if (!g_is_connected) {
         return SD2SNES_ERROR_INVALID_PARAMETER;
     }
@@ -574,6 +601,7 @@ sd2snes_error_t sd2snes_menu_reset(void) {
 }
 
 sd2snes_error_t sd2snes_get_info(sd2snes_info_t *info) {
+    WITH_LOCK;
     if (!g_is_connected) {
         return SD2SNES_ERROR_INVALID_PARAMETER;
     }
