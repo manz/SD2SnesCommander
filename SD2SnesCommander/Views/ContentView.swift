@@ -49,7 +49,7 @@ struct ContentView: View {
                 Button(action: viewModel.toggleConnection) {
                     Image(systemName: viewModel.isConnected ? "cable.connector" : "cable.connector.slash")
                 }
-                .help(viewModel.isConnected ? "Disconnect" : "Connect to QUsb2Snes")
+                .help(viewModel.isConnected ? "Disconnect" : "Connect to SD2Snes")
 
                 if viewModel.isConnected {
                     Menu {

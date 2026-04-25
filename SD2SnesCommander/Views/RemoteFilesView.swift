@@ -90,7 +90,7 @@ struct RemoteFilesView: View {
                         .font(.title2)
                         .fontWeight(.medium)
 
-                    Text("Connect to QUsb2Snes to browse device files")
+                    Text("Connect to SD2Snes to browse device files")
                         .foregroundStyle(.secondary)
                         .multilineTextAlignment(.center)
 
