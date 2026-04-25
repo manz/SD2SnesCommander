@@ -4,6 +4,23 @@ import SD2snesCommanderCore
 
 @MainActor
 extension MainViewModel {
+    // Pipe a progress stream into transferProgress on the main actor with
+    // last-value-wins coalescing — without this, every C tick would spawn a
+    // new MainActor Task and queue could grow unbounded on fast transfers.
+    private func makeProgressBridge() -> (handler: @Sendable (Double) -> Void, finish: () -> Void, drain: Task<Void, Never>) {
+        let (stream, continuation) = AsyncStream<Double>.makeStream(bufferingPolicy: .bufferingNewest(1))
+        let drain = Task { @MainActor [weak self] in
+            for await progress in stream {
+                self?.transferProgress = progress
+            }
+        }
+        let handler: @Sendable (Double) -> Void = { progress in
+            continuation.yield(progress)
+        }
+        let finish = { continuation.finish() }
+        return (handler, finish, drain)
+    }
+
     func uploadFile(_ file: LocalFileItem) {
         guard !file.isDirectory && isConnected else { return }
 
@@ -12,40 +29,39 @@ extension MainViewModel {
             var actualFilePath = file.path
             var tempFilePath: String? = nil
 
-            do {
-                isTransferInProgress = true
-                transferProgress = 0.0
+            isTransferInProgress = true
+            transferProgress = 0.0
 
-                if file.isRomFile, let ipsPath = IPSPatcher.findIPSPatch(for: file.path) {
-                    transferStatus = "Applying IPS patch..."
-
-                    do {
-                        tempFilePath = try IPSPatcher.createTemporaryPatchedFile(
-                            romPath: file.path,
-                            ipsPath: ipsPath
-                        )
-                        actualFilePath = tempFilePath!
-                        transferStatus = "Uploading patched \(file.name)..."
-                    } catch {
-                        transferStatus = "IPS patch failed: \(error.localizedDescription). Uploading \(file.name)..."
-                    }
-                } else {
-                    transferStatus = "Uploading \(file.name)..."
+            if file.isRomFile, let ipsPath = IPSPatcher.findIPSPatch(for: file.path) {
+                transferStatus = "Applying IPS patch..."
+                do {
+                    tempFilePath = try IPSPatcher.createTemporaryPatchedFile(
+                        romPath: file.path,
+                        ipsPath: ipsPath
+                    )
+                    actualFilePath = tempFilePath!
+                    transferStatus = "Uploading patched \(file.name)..."
+                } catch {
+                    transferStatus = "IPS patch failed: \(error.localizedDescription). Uploading \(file.name)..."
                 }
+            } else {
+                transferStatus = "Uploading \(file.name)..."
+            }
 
-                let fullRemotePath = currentRemotePath.isEmpty
-                    ? file.name
-                    : "\(currentRemotePath)/\(file.name)"
+            let fullRemotePath = currentRemotePath.isEmpty
+                ? file.name
+                : "\(currentRemotePath)/\(file.name)"
 
+            let bridge = makeProgressBridge()
+
+            do {
                 try await usbClient.uploadFile(
                     localPath: actualFilePath,
                     remotePath: fullRemotePath,
-                    progressHandler: { [weak self] progress in
-                        Task { @MainActor in
-                            self?.transferProgress = progress
-                        }
-                    }
+                    progressHandler: bridge.handler
                 )
+                bridge.finish()
+                _ = await bridge.drain.value
 
                 transferStatus = "Upload completed"
                 transferProgress = 1.0
@@ -55,15 +71,14 @@ extension MainViewModel {
                     try? FileManager.default.removeItem(atPath: tempPath)
                 }
 
-                try await Task.sleep(nanoseconds: 2_000_000_000)
+                try? await Task.sleep(nanoseconds: 2_000_000_000)
                 isTransferInProgress = false
                 transferStatus = ""
-
             } catch {
+                bridge.finish()
                 if let tempPath = tempFilePath {
                     try? FileManager.default.removeItem(atPath: tempPath)
                 }
-
                 transferStatus = "Upload failed: \(error.localizedDescription)"
                 isTransferInProgress = false
             }
@@ -77,33 +92,33 @@ extension MainViewModel {
         transferTask = Task {
             guard let url = await fileManager.saveFile(suggestedName: file.name) else { return }
 
+            isTransferInProgress = true
+            transferProgress = 0.0
+            transferStatus = "Downloading \(file.name)..."
+
+            let fullRemotePath = currentRemotePath.isEmpty
+                ? file.name
+                : "\(currentRemotePath)/\(file.name)"
+
+            let bridge = makeProgressBridge()
+
             do {
-                isTransferInProgress = true
-                transferProgress = 0.0
-                transferStatus = "Downloading \(file.name)..."
-
-                let fullRemotePath = currentRemotePath.isEmpty
-                    ? file.name
-                    : "\(currentRemotePath)/\(file.name)"
-
                 try await usbClient.downloadFile(
                     remotePath: fullRemotePath,
                     localPath: url.path,
-                    progressHandler: { [weak self] progress in
-                        Task { @MainActor in
-                            self?.transferProgress = progress
-                        }
-                    }
+                    progressHandler: bridge.handler
                 )
+                bridge.finish()
+                _ = await bridge.drain.value
 
                 transferStatus = "Download completed"
                 transferProgress = 1.0
 
-                try await Task.sleep(nanoseconds: 2_000_000_000)
+                try? await Task.sleep(nanoseconds: 2_000_000_000)
                 isTransferInProgress = false
                 transferStatus = ""
-
             } catch {
+                bridge.finish()
                 transferStatus = "Download failed: \(error.localizedDescription)"
                 isTransferInProgress = false
             }
