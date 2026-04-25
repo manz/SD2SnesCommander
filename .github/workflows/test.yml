@@ -1,0 +1,34 @@
+name: test
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: macos-26
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Show Xcode and macOS versions
+        run: |
+          sw_vers
+          xcodebuild -version
+
+      - name: Build and test
+        run: |
+          xcodebuild \
+            -project SD2SnesCommander.xcodeproj \
+            -scheme SD2SnesCommander \
+            -destination 'platform=macOS' \
+            -resultBundlePath TestResults.xcresult \
+            test | tee xcodebuild.log
+
+      - name: Upload xcresult
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: TestResults.xcresult
+          if-no-files-found: ignore
