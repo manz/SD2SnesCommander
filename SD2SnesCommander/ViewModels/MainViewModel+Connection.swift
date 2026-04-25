@@ -42,6 +42,8 @@ extension MainViewModel {
     func disconnect() {
         infoPollTask?.cancel()
         infoPollTask = nil
+        transferTask?.cancel()
+        transferTask = nil
         Task {
             await usbClient.disconnect()
             isConnected = false
@@ -50,6 +52,7 @@ extension MainViewModel {
             connectionStatus = "Disconnected"
             deviceName = "SD2Snes Commander"
             remoteFiles = []
+            clearRemoteSelection()
         }
     }
 
@@ -128,6 +131,10 @@ extension MainViewModel {
         guard isConnected, !isTransferInProgress, !isGaming else { return }
         do {
             let info = try await usbClient.info()
+            // Re-check after the await — disconnect or a transfer may have
+            // started during the round-trip.
+            guard isConnected, !isTransferInProgress else { return }
+
             let nowGaming = Self.isGamingFromRomName(info.romName)
             let previousRom = currentRomName
             currentRomName = Self.displayRomName(info.romName, gaming: nowGaming)
@@ -140,7 +147,21 @@ extension MainViewModel {
                 await refreshRemoteFiles()
             }
         } catch {
-            // Swallow: device may be busy mid-game. Keep prior state.
+            // Treat info errors as a hint that the device may have gone away;
+            // mirror the C-side state (which recover_pipe flips on hard
+            // disconnect) into the UI flag so the connect/disconnect button
+            // and dependent views update.
+            let stillThere = await usbClient.isConnected
+            if !stillThere {
+                isConnected = false
+                isGaming = false
+                currentRomName = nil
+                connectionStatus = "Disconnected"
+                remoteFiles = []
+                clearRemoteSelection()
+                infoPollTask?.cancel()
+                infoPollTask = nil
+            }
         }
     }
 
