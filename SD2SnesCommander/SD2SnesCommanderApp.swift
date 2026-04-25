@@ -14,6 +14,7 @@ struct SD2SnesCommanderApp: App {
         .commands {
             CommandGroup(replacing: .appInfo) {
                 Button("About SD2Snes Commander") {
+                    NSApplication.shared.orderFrontStandardAboutPanel(nil)
                 }
                 Divider()
                 Button("Install Command Line Tool…") {
