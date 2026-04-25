@@ -22,3 +22,7 @@ xcuserdata/
 *.ipa
 *.dSYM.zip
 *.dSYM
+
+## Coverage / profiling
+*.profraw
+*.profdata
