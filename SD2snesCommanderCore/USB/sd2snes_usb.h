@@ -127,6 +127,24 @@ sd2snes_error_t sd2snes_get_info(sd2snes_info_t *info);
 // Utility Functions
 const char* sd2snes_error_string(sd2snes_error_t error);
 
+// Wire format helpers. Pure functions, no IOKit, exposed for unit tests.
+// Build a 512-byte command packet into `packet` (must be USB_BLOCK_SIZE long).
+// `parameter` is null-terminated; pass NULL or empty string when unused.
+void sd2snes_build_command_packet(uint8_t* packet,
+                                  sd2snes_opcode_t opcode,
+                                  sd2snes_space_t space,
+                                  sd2snes_flags_t flags,
+                                  const char* parameter,
+                                  uint32_t data_size);
+
+// Parse the standard response header out of a 512-byte packet. Returns
+// SD2SNES_ERROR_INVALID_RESPONSE when the magic is wrong; SUCCESS otherwise.
+// `out_error` receives the firmware error byte (0 = success), `out_total_size`
+// the U32BE size at offset 252.
+sd2snes_error_t sd2snes_parse_response_header(const uint8_t* packet,
+                                              uint8_t* out_error,
+                                              uint32_t* out_total_size);
+
 #ifdef __cplusplus
 }
 #endif

@@ -916,15 +916,12 @@ static sd2snes_error_t open_interface(void) {
     return SD2SNES_SUCCESS;
 }
 
-static sd2snes_error_t send_packet(sd2snes_opcode_t opcode, sd2snes_space_t space,
-                                   sd2snes_flags_t flags, const char* parameter,
-                                   const uint8_t* data, uint32_t data_size) {
-    if (!g_interface_interface) {
-        return SD2SNES_ERROR_CONNECTION_FAILED;
-    }
-    SD2SNES_LOG("[SD2SNES] sending packed for opcode %d space %d.\n", opcode, space);
-    // Create USB packet
-    uint8_t packet[USB_BLOCK_SIZE];
+void sd2snes_build_command_packet(uint8_t* packet,
+                                  sd2snes_opcode_t opcode,
+                                  sd2snes_space_t space,
+                                  sd2snes_flags_t flags,
+                                  const char* parameter,
+                                  uint32_t data_size) {
     memset(packet, 0, USB_BLOCK_SIZE);
 
     // Magic header "USBA"
@@ -933,30 +930,59 @@ static sd2snes_error_t send_packet(sd2snes_opcode_t opcode, sd2snes_space_t spac
     packet[2] = 'B';
     packet[3] = 'A';
 
-    // Command fields
     packet[4] = (uint8_t)opcode;
     packet[5] = (uint8_t)space;
     packet[6] = (uint8_t)flags;
 
-    // Size field (little-endian at offset 252-255)
+    // Size field at offset 252-255 (U32BE).
     packet[252] = (data_size >> 24) & 0xFF;
     packet[253] = (data_size >> 16) & 0xFF;
-    packet[254] = (data_size >> 8) & 0xFF;
-    packet[255] = data_size & 0xFF;
+    packet[254] = (data_size >>  8) & 0xFF;
+    packet[255] =  data_size        & 0xFF;
 
-    // Parameter string at offset 256 (but our packet is only 512 bytes)
-    if (parameter && strlen(parameter) > 0) {
+    // Parameter string at offset 256, capped to 255 bytes so a null
+    // terminator fits before the packet ends.
+    if (parameter && parameter[0] != '\0') {
         size_t param_len = strlen(parameter);
-        if (param_len > 255) param_len = 255;  // Limit to fit in remaining space
+        if (param_len > 255) param_len = 255;
         memcpy(&packet[256], parameter, param_len);
     }
+}
 
-    // Send the packet
+sd2snes_error_t sd2snes_parse_response_header(const uint8_t* packet,
+                                              uint8_t* out_error,
+                                              uint32_t* out_total_size) {
+    if (!packet || !out_error || !out_total_size) {
+        return SD2SNES_ERROR_INVALID_PARAMETER;
+    }
+    if (packet[0] != 'U' || packet[1] != 'S' ||
+        packet[2] != 'B' || packet[3] != 'A') {
+        return SD2SNES_ERROR_INVALID_RESPONSE;
+    }
+    *out_error = packet[5];
+    *out_total_size = ((uint32_t)packet[252] << 24) |
+                      ((uint32_t)packet[253] << 16) |
+                      ((uint32_t)packet[254] <<  8) |
+                      ((uint32_t)packet[255]);
+    return SD2SNES_SUCCESS;
+}
+
+static sd2snes_error_t send_packet(sd2snes_opcode_t opcode, sd2snes_space_t space,
+                                   sd2snes_flags_t flags, const char* parameter,
+                                   const uint8_t* data, uint32_t data_size) {
+    (void)data;
+    if (!g_interface_interface) {
+        return SD2SNES_ERROR_CONNECTION_FAILED;
+    }
+    SD2SNES_LOG("[SD2SNES] sending packed for opcode %d space %d.\n", opcode, space);
+
+    uint8_t packet[USB_BLOCK_SIZE];
+    sd2snes_build_command_packet(packet, opcode, space, flags, parameter, data_size);
+
     kern_return_t result = (*g_interface_interface)->WritePipe(g_interface_interface, 1, packet, USB_BLOCK_SIZE);
     if (result != kIOReturnSuccess) {
         return SD2SNES_ERROR_TRANSFER_FAILED;
     }
-
     return SD2SNES_SUCCESS;
 }
 
