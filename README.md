@@ -43,7 +43,31 @@ The build produces `.../Debug/SD2SnesCommander.app` containing the app, the
 embedded CLI and the XPC service, all signed ad-hoc.
 
 To enable the verbose USB trace (off by default) add
-`GCC_PREPROCESSOR_DEFINITIONS=SD2SNES_DEBUG=1` to the build.
+`'GCC_PREPROCESSOR_DEFINITIONS=$(inherited) SD2SNES_DEBUG=1'` to the
+`xcodebuild` invocation.
+
+## Project file
+
+`SD2SnesCommander.xcodeproj` is generated from `project.yml` and gitignored.
+Changes made in Xcode's project editor are overwritten on the next
+`xcodegen generate`; edit `project.yml`.
+
+| Folder                       | Target                       | Product                              |
+| ---------------------------- | ---------------------------- | ------------------------------------ |
+| `SD2SnesCommander/`          | `SD2SnesCommander`           | app, embeds the next three           |
+| `SD2snesCommanderCore/`      | `SD2snesCommanderCore`       | framework (`Contents/Frameworks`)    |
+| `sd2snes/`                   | `sd2snes`                    | CLI tool (`Contents/Helpers`)        |
+| `SD2SnesUSBService/`         | `SD2SnesUSBService`          | XPC service (`Contents/XPCServices`) |
+| `SD2snesCommanderCoreTests/` | `SD2snesCommanderCoreTests`  | unit tests, hosted by the app        |
+| `SD2SnesCommanderTests/`     | `SD2SnesCommanderTests`      | unit tests, hosted by the app        |
+| `SD2SnesCommanderUITests/`   | `SD2SnesCommanderUITests`    | UI test placeholder                  |
+
+- Each target compiles every file under its folder.
+- `settingPresets: none`: XcodeGen adds no default build settings.
+- The `SD2SnesCommander` scheme builds the app and runs all three test
+  bundles.
+- `SD2SnesCommander/Info.plist` and `SD2SnesCommander.entitlements` are
+  excluded. The app's plist is generated from `INFOPLIST_KEY_*` settings.
 
 ## Tests
 
@@ -53,9 +77,10 @@ xcodebuild -project SD2SnesCommander.xcodeproj \
            -destination 'platform=macOS' test
 ```
 
-The unit tests cover the IPS patcher, the C↔Swift error mapping, the
-`RemoteInfo` decoder, gaming-state detection and navigation history. They do
-not touch a real device.
+The unit tests cover the IPS patcher, USB command packing and response
+parsing, the C↔Swift error mapping, the `RemoteInfo` decoder, ROM file-type
+detection, gaming-state detection and navigation history. They do not touch
+a real device.
 
 ## Installing the CLI
 
