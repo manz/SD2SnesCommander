@@ -46,6 +46,40 @@ To enable the verbose USB trace (off by default) add
 `'GCC_PREPROCESSOR_DEFINITIONS=$(inherited) SD2SNES_DEBUG=1'` to the
 `xcodebuild` invocation.
 
+## Project file
+
+`project.yml` is the source of truth for the Xcode project.
+`SD2SnesCommander.xcodeproj` is generated output and gitignored, so anything
+changed in Xcode's project editor (build settings, phases, targets, schemes)
+is lost on the next `xcodegen generate`. Make the change in `project.yml`
+instead.
+
+| Folder                       | Target                       | Product                                  |
+| ---------------------------- | ---------------------------- | ---------------------------------------- |
+| `SD2SnesCommander/`          | `SD2SnesCommander`           | app; embeds the three below              |
+| `SD2snesCommanderCore/`      | `SD2snesCommanderCore`       | framework (`Contents/Frameworks`)        |
+| `sd2snes/`                   | `sd2snes`                    | CLI tool (`Contents/Helpers`)            |
+| `SD2SnesUSBService/`         | `SD2SnesUSBService`          | XPC service (`Contents/XPCServices`)     |
+| `SD2snesCommanderCoreTests/` | `SD2snesCommanderCoreTests`  | unit tests, hosted by the app            |
+| `SD2SnesCommanderTests/`     | `SD2SnesCommanderTests`      | unit tests, hosted by the app            |
+| `SD2SnesCommanderUITests/`   | `SD2SnesCommanderUITests`    | UI test placeholder                      |
+
+- **Files:** each target compiles everything under its folder. Adding,
+  removing or renaming a file only needs a regenerate.
+- **Build settings:** project-wide ones live under the top-level
+  `settings`, per-target ones under `targets.<name>.settings`.
+  `settingPresets: none` is set, so XcodeGen adds no defaults of its own:
+  what `project.yml` says is the whole configuration.
+- **Scheme:** the single shared `SD2SnesCommander` scheme builds the app
+  (and with it the framework, CLI and XPC service) and runs all three test
+  bundles.
+- **Headers:** `SD2snesCommanderCore.h` and `USB/sd2snes_usb.h` are public
+  headers of the framework.
+- **Info.plist:** the app's plist is generated from `INFOPLIST_KEY_*`
+  settings; `SD2SnesCommander/Info.plist` and
+  `SD2SnesCommander.entitlements` are excluded and not used. The XPC
+  service uses `SD2SnesUSBService/Info.plist` for its `XPCService` keys.
+
 ## Tests
 
 ```sh
