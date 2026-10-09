@@ -26,3 +26,6 @@ xcuserdata/
 ## Coverage / profiling
 *.profraw
 *.profdata
+
+## XcodeGen output (regenerate with `xcodegen generate`)
+*.xcodeproj

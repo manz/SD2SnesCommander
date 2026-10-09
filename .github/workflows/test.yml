@@ -16,6 +16,11 @@ jobs:
           sw_vers
           xcodebuild -version
 
+      - name: Generate Xcode project
+        run: |
+          brew install xcodegen
+          xcodegen generate
+
       - name: Build and test
         run: |
           xcodebuild \

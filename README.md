@@ -21,7 +21,17 @@ the menu — from a SwiftUI window or from the shell.
 
 ## Building
 
-Requires Xcode 26 and macOS 26.4 or newer (deployment target).
+Requires Xcode 26, macOS 26.4 or newer (deployment target) and
+[XcodeGen](https://github.com/yonaskolb/XcodeGen). The Xcode project is
+generated from `project.yml` and not checked in:
+
+```sh
+brew install xcodegen
+xcodegen generate
+```
+
+Re-run `xcodegen generate` after adding or removing files or editing
+`project.yml`.
 
 ```sh
 xcodebuild -project SD2SnesCommander.xcodeproj \
