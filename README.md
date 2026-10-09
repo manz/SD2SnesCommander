@@ -43,7 +43,8 @@ The build produces `.../Debug/SD2SnesCommander.app` containing the app, the
 embedded CLI and the XPC service, all signed ad-hoc.
 
 To enable the verbose USB trace (off by default) add
-`GCC_PREPROCESSOR_DEFINITIONS=SD2SNES_DEBUG=1` to the build.
+`'GCC_PREPROCESSOR_DEFINITIONS=$(inherited) SD2SNES_DEBUG=1'` to the
+`xcodebuild` invocation.
 
 ## Tests
 
@@ -53,9 +54,10 @@ xcodebuild -project SD2SnesCommander.xcodeproj \
            -destination 'platform=macOS' test
 ```
 
-The unit tests cover the IPS patcher, the C↔Swift error mapping, the
-`RemoteInfo` decoder, gaming-state detection and navigation history. They do
-not touch a real device.
+The unit tests cover the IPS patcher, USB command packing and response
+parsing, the C↔Swift error mapping, the `RemoteInfo` decoder, ROM file-type
+detection, gaming-state detection and navigation history. They do not touch
+a real device.
 
 ## Installing the CLI
 
